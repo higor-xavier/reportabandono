@@ -1,15 +1,123 @@
+import { useState } from "react"
+import { toast } from "sonner"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Logo } from "./Logo"
 import { PetIllustration } from "./PetIllustration"
+import {
+  showInvalidEmailToast,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  showEmailNotFoundToast, // Pronto para uso quando API retornar USER_NOT_FOUND
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  showInvalidCredentialsToast, // Pronto para uso quando API retornar INVALID_CREDENTIALS
+  showErrorToast,
+} from "@/lib/toast-helpers"
+
+// Função para validar formato de e-mail
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
 
 export function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [emailError, setEmailError] = useState("")
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setEmail(value)
+    
+    // Limpa erro quando o usuário começa a digitar
+    if (emailError) {
+      setEmailError("")
+    }
+  }
+
+  const handleEmailBlur = () => {
+    if (email && !isValidEmail(email)) {
+      setEmailError("E-mail inválido")
+      showInvalidEmailToast()
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    // Validação de e-mail
+    if (!email) {
+      toast.error("Campo obrigatório", {
+        description: "Por favor, preencha o campo de e-mail",
+      })
+      return
+    }
+
+    if (!isValidEmail(email)) {
+      setEmailError("E-mail inválido")
+      showInvalidEmailToast()
+      return
+    }
+
+    if (!password) {
+      toast.error("Campo obrigatório", {
+        description: "Por favor, preencha o campo de senha",
+      })
+      return
+    }
+
+    // Simulação de chamada à API
+    // TODO: Substituir por chamada real quando o backend estiver pronto
+    try {
+      // const response = await fetch('/api/login', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email, password }),
+      // })
+      
+      // if (!response.ok) {
+      //   const error = await response.json()
+      //   
+      //   // E-mail não cadastrado
+      //   if (error.code === 'USER_NOT_FOUND' || error.message?.includes('não encontrado')) {
+      //     showEmailNotFoundToast(() => {
+      //       // Navegar para página de registro
+      //       // navigate('/register')
+      //     })
+      //     return
+      //   }
+      
+      //   // E-mail ou senha inválidos
+      //   if (error.code === 'INVALID_CREDENTIALS' || error.message?.includes('inválido')) {
+      //     showInvalidCredentialsToast()
+      //     return
+      //   }
+      
+      //   // Erro genérico
+      //   showErrorToast("Erro ao fazer login", error.message || "Ocorreu um erro inesperado")
+      //   return
+      // }
+      
+      // const data = await response.json()
+      // toast.success("Login realizado com sucesso!", {
+      //   description: "Redirecionando...",
+      // })
+      // // Redirecionar para dashboard ou página principal
+      // // navigate('/dashboard')
+      
+    } catch (error) {
+      showErrorToast(
+        "Erro ao fazer login",
+        "Ocorreu um erro inesperado. Por favor, tente novamente."
+      )
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="w-full px-6 flex items-center justify-center gap-4 flex-wrap" style={{ backgroundColor: '#A4CEBD' }}>
         <Logo />
-        <h1 className="text-gray-700 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extralight text-center opacity-75">Gerenciador de Denúncias</h1>
+        <h1 className="text-gray-700 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extralight text-center opacity-75">ReportAbandono</h1>
       </header>
 
       {/* Main Content */}
@@ -24,7 +132,7 @@ export function LoginPage() {
           <div className="bg-white rounded-lg shadow-md w-full max-w-md p-6 md:p-8">
             <h2 className="text-2xl font-semibold text-gray-800 text-center mb-8">Entrar</h2>
             
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Email Field */}
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-gray-700">
@@ -34,8 +142,20 @@ export function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="example@email.com"
-                  className="w-full bg-gray-100 border-gray-300"
+                  value={email}
+                  onChange={handleEmailChange}
+                  onBlur={handleEmailBlur}
+                  className={`w-full bg-gray-100 border-gray-300 ${
+                    emailError ? "border-red-500 focus-visible:ring-red-500" : ""
+                  }`}
+                  aria-invalid={emailError ? "true" : "false"}
+                  aria-describedby={emailError ? "email-error" : undefined}
                 />
+                {emailError && (
+                  <p id="email-error" className="text-sm text-red-500">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -47,6 +167,8 @@ export function LoginPage() {
                   id="password"
                   type="password"
                   placeholder="**********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-gray-100 border-gray-300"
                 />
               </div>
@@ -54,8 +176,8 @@ export function LoginPage() {
               {/* Login Button */}
               <Button
                 type="submit"
-                className="w-full text-white font-semibold py-2 h-11 hover:opacity-90"
-                style={{ backgroundColor: '#85A191' }}
+                variant="primary"
+                className="w-full font-semibold py-2 h-11"
               >
                 LOGAR
               </Button>
