@@ -1,0 +1,8 @@
+{
+  "name": "report-abandono-workspace",
+  "private": true,
+  "workspaces": [
+    "report-abandono",
+    "report-abandono-server"
+  ]
+}

@@ -1,8 +1,9 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Logo } from "./Logo"
+import { Header } from "./Header"
 import { PetIllustration } from "./PetIllustration"
 import {
   showInvalidEmailToast,
@@ -114,11 +115,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="w-full px-6 flex items-center justify-center gap-4 flex-wrap" style={{ backgroundColor: '#A4CEBD' }}>
-        <Logo />
-        <h1 className="text-gray-700 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extralight text-center opacity-75">ReportAbandono</h1>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col lg:flex-row">
@@ -188,8 +185,9 @@ export function LoginPage() {
                   type="button"
                   variant="secondary"
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
+                  asChild
                 >
-                  Registrar-se
+                  <Link to="/register">Registrar-se</Link>
                 </Button>
                 <Button
                   type="button"
