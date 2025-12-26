@@ -1,8 +1,5 @@
 {
-  "name": "report-abandono-workspace",
-  "private": true,
-  "workspaces": [
-    "report-abandono",
-    "report-abandono-server"
-  ]
+  "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.16"
+  }
 }
