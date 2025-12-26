@@ -1,18 +1,11 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { toast } from "sonner"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Header } from "./Header"
 import { PetIllustration } from "./PetIllustration"
-import {
-  showInvalidEmailToast,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showEmailNotFoundToast, // Pronto para uso quando API retornar USER_NOT_FOUND
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showInvalidCredentialsToast, // Pronto para uso quando API retornar INVALID_CREDENTIALS
-  showErrorToast,
-} from "@/lib/toast-helpers"
+import { showInvalidEmailToast, showErrorToast, showSuccessToast, showEmailNotFoundForgotPasswordToast } from "@/lib/toast-helpers"
 
 // Função para validar formato de e-mail
 function isValidEmail(email: string): boolean {
@@ -20,9 +13,8 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
-export function LoginPage() {
+export function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [emailError, setEmailError] = useState("")
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,12 +36,10 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
+
     // Validação de e-mail
     if (!email) {
-      toast.error("Campo obrigatório", {
-        description: "Por favor, preencha o campo de e-mail",
-      })
+      showErrorToast("Campo obrigatório", "Por favor, preencha o campo de e-mail")
       return
     }
 
@@ -59,20 +49,13 @@ export function LoginPage() {
       return
     }
 
-    if (!password) {
-      toast.error("Campo obrigatório", {
-        description: "Por favor, preencha o campo de senha",
-      })
-      return
-    }
-
     // Simulação de chamada à API
     // TODO: Substituir por chamada real quando o backend estiver pronto
     try {
-      // const response = await fetch('/api/login', {
+      // const response = await fetch('/api/forgot-password', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
+      //   body: JSON.stringify({ email }),
       // })
       
       // if (!response.ok) {
@@ -80,34 +63,22 @@ export function LoginPage() {
       //   
       //   // E-mail não cadastrado
       //   if (error.code === 'USER_NOT_FOUND' || error.message?.includes('não encontrado')) {
-      //     showEmailNotFoundToast(() => {
-      //       // Navegar para página de registro
-      //       // navigate('/register')
-      //     })
-      //     return
-      //   }
-      
-      //   // E-mail ou senha inválidos
-      //   if (error.code === 'INVALID_CREDENTIALS' || error.message?.includes('inválido')) {
-      //     showInvalidCredentialsToast()
+      //     showEmailNotFoundForgotPasswordToast()
       //     return
       //   }
       
       //   // Erro genérico
-      //   showErrorToast("Erro ao fazer login", error.message || "Ocorreu um erro inesperado")
+      //   showErrorToast("Erro ao enviar token", error.message || "Ocorreu um erro inesperado. Por favor, tente novamente.")
       //   return
       // }
       
       // const data = await response.json()
-      // toast.success("Login realizado com sucesso!", {
-      //   description: "Redirecionando...",
-      // })
-      // // Redirecionar para dashboard ou página principal
-      // // navigate('/dashboard')
+      // // Toast de sucesso só aparece quando o servidor confirmar
+      // showSuccessToast("Token enviado", "Um token foi enviado para o e-mail informado para realizar o login e a troca de senha.")
       
     } catch (error) {
       showErrorToast(
-        "Erro ao fazer login",
+        "Erro ao enviar token",
         "Ocorreu um erro inesperado. Por favor, tente novamente."
       )
     }
@@ -117,23 +88,33 @@ export function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Section - Illustration */}
         <div className="hidden lg:flex flex-1 bg-white items-center justify-center p-6 md:p-12">
           <PetIllustration />
         </div>
 
-        {/* Right Section - Login Form */}
+        {/* Right Section - Forgot Password Form */}
         <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-md w-full max-w-md p-4 sm:p-6 md:p-8 my-auto">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 text-center mb-6 sm:mb-8">Entrar</h2>
-            
+          <div className="bg-white rounded-lg shadow-md w-full max-w-md p-4 sm:p-6 md:p-8 my-auto relative">
+            {/* Back Button */}
+            <Link
+              to="/"
+              className="absolute top-4 left-4 sm:top-6 sm:left-6 text-gray-600 hover:text-gray-800 transition-colors"
+              aria-label="Voltar para login"
+            >
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Link>
+
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 text-center mb-4 sm:mb-6">
+              Esqueceu a senha
+            </h2>
+
             <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
               {/* Email Field */}
               <div className="space-y-1 sm:space-y-2">
                 <label htmlFor="email" className="text-xs sm:text-sm font-medium text-gray-700">
-                  E-mail:
+                  Digite o e-mail da sua conta:
                 </label>
                 <Input
                   id="email"
@@ -155,49 +136,14 @@ export function LoginPage() {
                 )}
               </div>
 
-              {/* Password Field */}
-              <div className="space-y-1 sm:space-y-2">
-                <label htmlFor="password" className="text-xs sm:text-sm font-medium text-gray-700">
-                  Senha:
-                </label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="**********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-100 border-gray-300"
-                />
-              </div>
-
-              {/* Login Button */}
+              {/* Submit Button */}
               <Button
                 type="submit"
                 variant="primary"
                 className="w-full font-semibold py-2 h-10 sm:h-11"
               >
-                LOGAR
+                TROCAR A SENHA
               </Button>
-
-              {/* Secondary Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
-                  asChild
-                >
-                  <Link to="/register">Registrar-se</Link>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
-                  asChild
-                >
-                  <Link to="/forgot-password">Esqueceu a senha?</Link>
-                </Button>
-              </div>
             </form>
           </div>
         </div>

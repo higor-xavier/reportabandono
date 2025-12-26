@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Header } from "./Header"
@@ -177,19 +179,28 @@ export function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <main className="flex-1 flex flex-col lg:flex-row">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Section - Illustration */}
-        <div className="flex-1 bg-white flex items-center justify-center p-6 md:p-12 min-h-[300px] lg:min-h-0">
+        <div className="hidden lg:flex flex-1 bg-white items-center justify-center p-6 md:p-12">
           <PetIllustration />
         </div>
 
         {/* Right Section - Registration Form */}
-        <div className="flex-1 bg-gray-50 flex items-center justify-center p-6 md:p-12">
-          <div className="bg-white rounded-lg shadow-md w-full max-w-md p-6 md:p-8">
-            <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">Cadastro</h2>
+        <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-md w-full max-w-md p-4 sm:p-6 md:p-8 my-auto relative">
+            {/* Back Button */}
+            <Link
+              to="/"
+              className="absolute top-4 left-4 sm:top-6 sm:left-6 text-gray-600 hover:text-gray-800 transition-colors"
+              aria-label="Voltar para login"
+            >
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Link>
+            
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 text-center mb-3 sm:mb-4">Cadastro</h2>
 
             {/* Toggle Group */}
-            <div className="mb-6 flex justify-center">
+            <div className="mb-4 sm:mb-6 flex justify-center">
               <ToggleGroup
                 value={userType}
                 onValueChange={handleUserTypeChange}
@@ -202,10 +213,10 @@ export function RegisterPage() {
             </div>
 
             {/* Form Container with Animation */}
-            <div className="relative min-h-[550px] overflow-hidden">
+            <div className="relative overflow-hidden">
               <form
                 onSubmit={handleSubmit}
-                className={`space-y-4 transition-all duration-300 ease-in-out ${
+                className={`space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out ${
                   isAnimating 
                     ? "opacity-0 translate-x-4 pointer-events-none" 
                     : "opacity-100 translate-x-0 pointer-events-auto"
@@ -214,8 +225,8 @@ export function RegisterPage() {
                 {userType === "common" ? (
                   <>
                     {/* Nome completo */}
-                    <div className="space-y-2">
-                      <label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="fullName" className="text-xs sm:text-sm font-medium text-gray-700">
                         Nome completo:
                       </label>
                       <Input
@@ -229,8 +240,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* E-mail */}
-                    <div className="space-y-2">
-                      <label htmlFor="commonEmail" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="commonEmail" className="text-xs sm:text-sm font-medium text-gray-700">
                         E-mail:
                       </label>
                       <Input
@@ -244,8 +255,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Senha */}
-                    <div className="space-y-2">
-                      <label htmlFor="commonPassword" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="commonPassword" className="text-xs sm:text-sm font-medium text-gray-700">
                         Senha:
                       </label>
                       <Input
@@ -259,8 +270,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Confirmar senha */}
-                    <div className="space-y-2">
-                      <label htmlFor="commonConfirmPassword" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="commonConfirmPassword" className="text-xs sm:text-sm font-medium text-gray-700">
                         Confirmar senha:
                       </label>
                       <Input
@@ -274,8 +285,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Telefone */}
-                    <div className="space-y-2">
-                      <label htmlFor="commonPhone" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="commonPhone" className="text-xs sm:text-sm font-medium text-gray-700">
                         Número de contato:
                       </label>
                       <Input
@@ -290,8 +301,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* CPF */}
-                    <div className="space-y-2">
-                      <label htmlFor="cpf" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="cpf" className="text-xs sm:text-sm font-medium text-gray-700">
                         CPF:
                       </label>
                       <Input
@@ -306,8 +317,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Endereço */}
-                    <div className="space-y-2">
-                      <label htmlFor="commonAddress" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="commonAddress" className="text-xs sm:text-sm font-medium text-gray-700">
                         Endereço residencial:
                       </label>
                       <Input
@@ -323,8 +334,8 @@ export function RegisterPage() {
                 ) : (
                   <>
                     {/* Nome da organização */}
-                    <div className="space-y-2">
-                      <label htmlFor="organizationName" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="organizationName" className="text-xs sm:text-sm font-medium text-gray-700">
                         Nome da organização:
                       </label>
                       <Input
@@ -338,8 +349,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* E-mail */}
-                    <div className="space-y-2">
-                      <label htmlFor="ongEmail" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="ongEmail" className="text-xs sm:text-sm font-medium text-gray-700">
                         E-mail:
                       </label>
                       <Input
@@ -353,8 +364,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Senha */}
-                    <div className="space-y-2">
-                      <label htmlFor="ongPassword" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="ongPassword" className="text-xs sm:text-sm font-medium text-gray-700">
                         Senha:
                       </label>
                       <Input
@@ -368,8 +379,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Confirmar senha */}
-                    <div className="space-y-2">
-                      <label htmlFor="ongConfirmPassword" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="ongConfirmPassword" className="text-xs sm:text-sm font-medium text-gray-700">
                         Confirmar senha:
                       </label>
                       <Input
@@ -383,8 +394,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Telefone */}
-                    <div className="space-y-2">
-                      <label htmlFor="ongPhone" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="ongPhone" className="text-xs sm:text-sm font-medium text-gray-700">
                         Número de contato:
                       </label>
                       <Input
@@ -399,8 +410,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* CNPJ */}
-                    <div className="space-y-2">
-                      <label htmlFor="cnpj" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="cnpj" className="text-xs sm:text-sm font-medium text-gray-700">
                         CNPJ:
                       </label>
                       <Input
@@ -415,8 +426,8 @@ export function RegisterPage() {
                     </div>
 
                     {/* Endereço */}
-                    <div className="space-y-2">
-                      <label htmlFor="ongAddress" className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="ongAddress" className="text-xs sm:text-sm font-medium text-gray-700">
                         Endereço da organização:
                       </label>
                       <Input
@@ -435,7 +446,7 @@ export function RegisterPage() {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full font-semibold py-2 h-11 mt-6"
+                  className="w-full font-semibold py-2 h-10 sm:h-11 mt-4 sm:mt-6"
                 >
                   CADASTRAR-SE
                 </Button>

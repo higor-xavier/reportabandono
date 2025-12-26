@@ -46,6 +46,15 @@ export function showErrorToast(message: string, description?: string) {
 }
 
 /**
+ * Exibe toast de erro para e-mail não cadastrado (página de esqueceu a senha)
+ */
+export function showEmailNotFoundForgotPasswordToast() {
+  toast.error("E-mail não cadastrado", {
+    description: "Este e-mail não está cadastrado no sistema.",
+  })
+}
+
+/**
  * Exibe toast de sucesso
  * @param message - Mensagem de sucesso
  * @param description - Descrição detalhada
@@ -55,4 +64,6 @@ export function showSuccessToast(message: string, description?: string) {
     description,
   })
 }
+
+
 
