@@ -5,6 +5,7 @@ import { RegisterPage } from "./components/RegisterPage"
 import { ForgotPasswordPage } from "./components/ForgotPasswordPage"
 import { HomePage } from "./components/HomePage"
 import { RegisterReportPage } from "./components/RegisterReportPage"
+import { NotFoundPage } from "./components/NotFoundPage"
 
 export function App() {
   return (
@@ -15,6 +16,7 @@ export function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/registrardenuncia" element={<RegisterReportPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster position="top-center" richColors />
     </BrowserRouter>
