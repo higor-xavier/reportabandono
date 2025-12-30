@@ -12,6 +12,7 @@ export function NavigationHeader() {
     { path: "/home", label: "Início" },
     { path: "/denuncias", label: "Denúncias" },
     { path: "/rastreio", label: "Rastreio" },
+    { path: "/registrardenuncia", label: "Realizar denúncia" },
   ]
 
   return (

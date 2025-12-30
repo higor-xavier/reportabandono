@@ -42,7 +42,7 @@ export function HomePage() {
               className="text-sm sm:text-base px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 h-auto"
               asChild
             >
-              <Link to="/register">Denunciar</Link>
+              <Link to="/registrardenuncia">Realizar denúncia</Link>
             </Button>
           </div>
 
