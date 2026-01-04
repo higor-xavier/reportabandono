@@ -3,10 +3,9 @@ import { NavigationHeader } from "./NavigationHeader"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import {
-  ArrowRightLeft,
+  Sun,
   Clock,
   CheckCircle,
-  XCircle,
   Search,
   Share2,
   MessageSquare,
@@ -16,7 +15,7 @@ import {
 } from "lucide-react"
 
 // Tipos para os dados
-type ComplaintStatus = "encaminhada" | "em_analise" | "negada" | "concluida"
+type ComplaintStatus = "nova" | "em_analise" | "reportada" | "concluida"
 
 interface Complaint {
   id: string
@@ -33,7 +32,7 @@ const mockComplaints: Complaint[] = [
     id: "1",
     protocolo: "125ds85E",
     dataInclusao: "12/12/2023",
-    status: "encaminhada",
+    status: "nova",
     dataRetorno: null,
     feedback: null,
   },
@@ -55,26 +54,26 @@ const mockComplaints: Complaint[] = [
   },
   {
     id: "4",
-    protocolo: "125ds85F",
-    dataInclusao: "08/12/2023",
+    protocolo: "1523sA3c",
+    dataInclusao: "09/12/2023",
     status: "concluida",
-    dataRetorno: "08/12/2023",
+    dataRetorno: "09/12/2023",
     feedback: "Denúncia analisada e ação tomada",
   },
   {
     id: "5",
-    protocolo: "125ds85G",
-    dataInclusao: "07/12/2023",
+    protocolo: "1523sA3c",
+    dataInclusao: "09/12/2023",
     status: "concluida",
-    dataRetorno: "07/12/2023",
+    dataRetorno: "09/12/2023",
     feedback: "Denúncia analisada e ação tomada",
   },
   {
     id: "6",
-    protocolo: "125ds85H",
-    dataInclusao: "06/12/2023",
+    protocolo: "1523sA3c",
+    dataInclusao: "09/12/2023",
     status: "concluida",
-    dataRetorno: "06/12/2023",
+    dataRetorno: "09/12/2023",
     feedback: "Denúncia analisada e ação tomada",
   },
 ]
@@ -82,9 +81,9 @@ const mockComplaints: Complaint[] = [
 // Função para formatar status
 const formatStatus = (status: ComplaintStatus): string => {
   const statusMap: Record<ComplaintStatus, string> = {
-    encaminhada: "Encaminhada",
+    nova: "Nova",
     em_analise: "Em análise",
-    negada: "Negada",
+    reportada: "Reportada",
     concluida: "Concluída",
   }
   return statusMap[status]
@@ -93,15 +92,33 @@ const formatStatus = (status: ComplaintStatus): string => {
 // Função para obter cor do status
 const getStatusColor = (status: ComplaintStatus): string => {
   const colorMap: Record<ComplaintStatus, string> = {
-    encaminhada: "bg-gray-200",
+    nova: "bg-gray-200",
     em_analise: "bg-gray-200",
-    negada: "bg-gray-300",
+    reportada: "bg-gray-300",
     concluida: "bg-[#A4CEBD]",
   }
   return colorMap[status]
 }
 
-export function ComplaintsListPage() {
+// Função para obter texto do feedback baseado no status
+const getFeedbackText = (status: ComplaintStatus, hasFeedback: boolean): string | null => {
+  if (hasFeedback) {
+    return "Ver retorno"
+  }
+  
+  switch (status) {
+    case "nova":
+      return "Abrir"
+    case "em_analise":
+      return "Dar retorno"
+    case "reportada":
+    case "concluida":
+    default:
+      return null
+  }
+}
+
+export function ComplaintsManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
@@ -114,7 +131,7 @@ export function ComplaintsListPage() {
   //   const fetchComplaints = async () => {
   //     setIsLoading(true)
   //     try {
-  //       const response = await fetch('/api/complaints')
+  //       const response = await fetch('/api/complaints/ong')
   //       const data = await response.json()
   //       setComplaints(data)
   //     } catch (error) {
@@ -132,9 +149,9 @@ export function ComplaintsListPage() {
   // Calcular contadores de status
   const statusCounts = useMemo(() => {
     return {
-      encaminhada: complaints.filter((c) => c.status === "encaminhada").length,
+      nova: complaints.filter((c) => c.status === "nova").length,
       em_analise: complaints.filter((c) => c.status === "em_analise").length,
-      negada: complaints.filter((c) => c.status === "negada").length,
+      reportada: complaints.filter((c) => c.status === "reportada").length,
       concluida: complaints.filter((c) => c.status === "concluida").length,
     }
   }, [complaints])
@@ -187,9 +204,15 @@ export function ComplaintsListPage() {
     console.log("Excluir denúncia:", complaint.id)
   }
 
-  const handleViewFeedback = (complaint: Complaint) => {
-    // TODO: Implementar visualização de feedback
-    console.log("Ver feedback:", complaint.feedback)
+  const handleFeedbackAction = (complaint: Complaint) => {
+    // TODO: Implementar ações de feedback baseadas no status
+    if (complaint.status === "nova") {
+      console.log("Abrir denúncia:", complaint.id)
+    } else if (complaint.status === "em_analise") {
+      console.log("Dar retorno para denúncia:", complaint.id)
+    } else if (complaint.feedback) {
+      console.log("Ver feedback:", complaint.feedback)
+    }
   }
 
   return (
@@ -200,16 +223,16 @@ export function ComplaintsListPage() {
         <div className="max-w-7xl mx-auto">
           {/* Título */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-800 mb-6 sm:mb-8 text-center">
-            Lista de denúncias
+            Gerenciamento de denúncias
           </h1>
 
           {/* Cards de Resumo de Status */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            {/* Encaminhadas */}
+            {/* Novas */}
             <div className="bg-gray-200 rounded-lg p-4 sm:p-5 flex flex-col items-center gap-2">
-              <ArrowRightLeft className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
-              <h3 className="text-sm sm:text-base font-medium text-gray-800">Encaminhadas</h3>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statusCounts.encaminhada}</p>
+              <Sun className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
+              <h3 className="text-sm sm:text-base font-medium text-gray-800">Novas</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statusCounts.nova}</p>
             </div>
 
             {/* Em análise */}
@@ -219,11 +242,11 @@ export function ComplaintsListPage() {
               <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statusCounts.em_analise}</p>
             </div>
 
-            {/* Negadas */}
+            {/* Reportadas */}
             <div className="bg-gray-300 rounded-lg p-4 sm:p-5 flex flex-col items-center gap-2">
-              <XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
-              <h3 className="text-sm sm:text-base font-medium text-gray-800">Negadas</h3>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statusCounts.negada}</p>
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
+              <h3 className="text-sm sm:text-base font-medium text-gray-800">Reportadas</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statusCounts.reportada}</p>
             </div>
 
             {/* Concluídas */}
@@ -287,65 +310,68 @@ export function ComplaintsListPage() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedComplaints.map((complaint) => (
-                    <tr key={complaint.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-xs sm:text-sm text-gray-900 font-mono">
-                        {complaint.protocolo}
-                      </td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                        {complaint.dataInclusao}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-xs sm:text-sm font-medium ${getStatusColor(
-                            complaint.status
-                          )} text-gray-800`}
-                        >
-                          {formatStatus(complaint.status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                        {complaint.dataRetorno || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-xs sm:text-sm">
-                        {complaint.feedback ? (
-                          <button
-                            onClick={() => handleViewFeedback(complaint)}
-                            className="text-[#85A191] hover:text-[#85A191]/80 underline"
+                  paginatedComplaints.map((complaint) => {
+                    const feedbackText = getFeedbackText(complaint.status, !!complaint.feedback)
+                    return (
+                      <tr key={complaint.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-900 font-mono">
+                          {complaint.protocolo}
+                        </td>
+                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                          {complaint.dataInclusao}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-xs sm:text-sm font-medium ${getStatusColor(
+                              complaint.status
+                            )} text-gray-800`}
                           >
-                            Ver retorno
-                          </button>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleShare(complaint)}
-                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                            aria-label="Compartilhar"
-                          >
-                            <Share2 className="w-4 h-4 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => handleComment(complaint)}
-                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                            aria-label="Comentar"
-                          >
-                            <MessageSquare className="w-4 h-4 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(complaint)}
-                            className="p-1.5 hover:bg-red-50 rounded transition-colors"
-                            aria-label="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {formatStatus(complaint.status)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                          {complaint.dataRetorno || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-xs sm:text-sm">
+                          {feedbackText ? (
+                            <button
+                              onClick={() => handleFeedbackAction(complaint)}
+                              className="text-[#85A191] hover:text-[#85A191]/80 underline"
+                            >
+                              {feedbackText}
+                            </button>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleShare(complaint)}
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                              aria-label="Compartilhar"
+                            >
+                              <Share2 className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => handleComment(complaint)}
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                              aria-label="Comentar"
+                            >
+                              <MessageSquare className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(complaint)}
+                              className="p-1.5 hover:bg-red-50 rounded transition-colors"
+                              aria-label="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>
@@ -392,5 +418,4 @@ export function ComplaintsListPage() {
     </div>
   )
 }
-
 

@@ -6,6 +6,7 @@ import { ForgotPasswordPage } from "./components/ForgotPasswordPage"
 import { HomePage } from "./components/HomePage"
 import { RegisterReportPage } from "./components/RegisterReportPage"
 import { ComplaintsListPage } from "./components/ComplaintsListPage"
+import { ComplaintsManagementPage } from "./components/ComplaintsManagementPage"
 import { NotFoundPage } from "./components/NotFoundPage"
 
 export function App() {
@@ -18,6 +19,7 @@ export function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/registrardenuncia" element={<RegisterReportPage />} />
         <Route path="/denuncias" element={<ComplaintsListPage />} />
+        <Route path="/gerenciamento-denuncias" element={<ComplaintsManagementPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster position="top-center" richColors />
