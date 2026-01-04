@@ -1,3 +1,4 @@
+import 'leaflet/dist/leaflet.css'
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "sonner"
 import { LoginPage } from "./components/LoginPage"
@@ -8,6 +9,7 @@ import { RegisterReportPage } from "./components/RegisterReportPage"
 import { ComplaintsListPage } from "./components/ComplaintsListPage"
 import { ComplaintsManagementPage } from "./components/ComplaintsManagementPage"
 import { RequestsManagementPage } from "./components/RequestsManagementPage"
+import { TrackingPage } from "./components/TrackingPage"
 import { NotFoundPage } from "./components/NotFoundPage"
 
 export function App() {
@@ -22,6 +24,7 @@ export function App() {
         <Route path="/denuncias" element={<ComplaintsListPage />} />
         <Route path="/gerenciamento-denuncias" element={<ComplaintsManagementPage />} />
         <Route path="/gerenciamento-solicitacoes" element={<RequestsManagementPage />} />
+        <Route path="/rastreio" element={<TrackingPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster position="top-center" richColors />

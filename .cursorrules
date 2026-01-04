@@ -33,6 +33,8 @@ report-abandono/
 │   │   ├── RegisterReportPage.tsx  # Tela de registro de denúncia
 │   │   ├── ComplaintsListPage.tsx  # Tela de listagem de denúncias (usuário comum)
 │   │   ├── ComplaintsManagementPage.tsx  # Tela de gerenciamento de denúncias (ONG)
+│   │   ├── RequestsManagementPage.tsx  # Tela de gerenciamento de solicitações (Administrador)
+│   │   ├── TrackingPage.tsx  # Tela de rastreio de denúncias com mapa interativo
 │   │   └── NotFoundPage.tsx  # Tela de erro 404
 │   ├── lib/
 │   │   ├── utils.ts          # Utilitários (cn function)
@@ -99,7 +101,7 @@ report-abandono/
 - Links: Início, Denúncias, Rastreio, Realizar denúncia
 - Menu mobile com hamburger
 - Avatar do usuário no canto direito (desktop)
-- Usado em: HomePage, RegisterReportPage, ComplaintsListPage, ComplaintsManagementPage
+- Usado em: HomePage, RegisterReportPage, ComplaintsListPage, ComplaintsManagementPage, RequestsManagementPage, TrackingPage
 
 #### UserAvatar Component
 - Localização: `src/components/UserAvatar.tsx`
@@ -124,6 +126,8 @@ report-abandono/
 - `/registrardenuncia` - RegisterReportPage
 - `/denuncias` - ComplaintsListPage (usuário comum)
 - `/gerenciamento-denuncias` - ComplaintsManagementPage (ONG)
+- `/gerenciamento-solicitacoes` - RequestsManagementPage (Administrador)
+- `/rastreio` - TrackingPage (mapa interativo de denúncias)
 - `*` - NotFoundPage (catch-all para rotas não encontradas)
 
 ## Responsividade
@@ -159,6 +163,13 @@ report-abandono/
 **Tabelas:**
 - Scroll horizontal em telas pequenas (`overflow-x-auto`)
 - Largura mínima: `min-w-[600px]`
+
+**Mapas:**
+- Altura mínima: `min-h-[500px]` no mobile, `min-h-[80vh]` no desktop
+- Container com `overflow-hidden` para evitar scrollbars indesejadas
+- Botões flutuantes posicionados com `fixed` no canto inferior direito
+- Zoom inicial configurável (padrão: 15 para rastreio)
+- Responsivo: mapa se adapta ao tamanho do container
 
 ## Padrões de Código
 
@@ -308,6 +319,64 @@ report-abandono/
 - ✅ Rota `/gerenciamento-denuncias` configurada
 - ✅ Responsividade completa
 
+### Tela de Gerenciamento de Solicitações - Administrador (RequestsManagementPage)
+- ✅ NavigationHeader
+- ✅ Título "Gerenciamento de solicitações"
+- ✅ Cards de resumo de status:
+  - Novas (cinza claro, ícone Sun)
+  - Em análise (cinza claro, ícone Clock)
+  - Negadas (cinza escuro, ícone XCircle)
+  - Concluídas (verde claro #A4CEBD, ícone CheckCircle)
+- ✅ Contadores dinâmicos calculados dos dados
+- ✅ Barra de busca com placeholder "Buscar por protocolo, status ou data"
+- ✅ Busca em tempo real (filtra enquanto digita)
+- ✅ Busca por protocolo, data, status e data de retorno
+- ✅ Tabela com colunas: Protocolo, Data de inclusão, Status, Data do retorno, Feedback, Ações
+- ✅ Status badges coloridos
+- ✅ Feedback dinâmico baseado no status:
+  - "Abrir" para status "Nova"
+  - "Dar retorno" para status "Em análise"
+  - "Ver retorno" para status "Concluída" (quando há feedback)
+- ✅ Ações: Compartilhar, Comentar, Excluir (ícones)
+- ✅ Paginação (5 itens por página)
+- ✅ Dados estáticos com estrutura pronta para backend
+- ✅ Interface `Request` e tipo `RequestStatus` específicos para administrador
+- ✅ Comentários TODO para integração com API (`/api/requests/admin`)
+- ✅ Rota `/gerenciamento-solicitacoes` configurada
+- ✅ Responsividade completa
+- ⚠️ **Contexto**: Gerencia denúncias de abandono, denúncias falsas e criação de usuários ONG
+
+### Tela de Rastreio de Denúncias (TrackingPage)
+- ✅ NavigationHeader
+- ✅ Título "Locais de incidências"
+- ✅ Mapa interativo usando Leaflet e react-leaflet
+- ✅ TileLayer do OpenStreetMap
+- ✅ Centro inicial: Teófilo Otoni, MG (Avenida Alfredo Sá) - coordenadas [-17.8575, -41.5053]
+- ✅ Zoom inicial: 15
+- ✅ Scroll wheel habilitado para zoom
+- ✅ Pins de denúncias com popups informativos:
+  - Protocolo da denúncia
+  - Data de inclusão
+  - Descrição (quando disponível)
+- ✅ Dados estáticos de denúncias na região (prontos para substituição por API)
+- ✅ Botão flutuante "+" (Nova Denúncia):
+  - Cor verde (#85A191)
+  - Link para `/registrardenuncia`
+  - Posicionado no canto inferior direito
+- ✅ Botão flutuante "Compartilhar":
+  - Exporta mapa como imagem em alta resolução
+  - Usa `html-to-image` (biblioteca que suporta CSS moderno, incluindo oklch)
+  - Tenta usar Web Share API quando disponível
+  - Fallback: download automático da imagem como PNG
+  - Filtra controles do Leaflet da captura
+  - Estado de loading durante geração
+- ✅ Renderização apenas no cliente (SSR-safe)
+- ✅ Correção automática dos ícones padrão do Leaflet
+- ✅ Componente `MapUpdater` para atualizar o mapa quando necessário
+- ✅ Estilos do Leaflet importados e customizados no `index.css`
+- ✅ Responsividade completa
+- ⚠️ **Sem integração com backend** - dados estáticos, estrutura pronta para API
+
 ### Tela de Erro 404 (NotFoundPage)
 - ✅ Header reutilizado
 - ✅ Ilustração PetIllustration reutilizada
@@ -326,6 +395,11 @@ report-abandono/
 - **tailwindcss**: Estilização
 - **class-variance-authority**: Variantes de componentes
 - **clsx** e **tailwind-merge**: Utilitários para classes CSS
+- **leaflet**: Biblioteca de mapas interativos
+- **react-leaflet**: Componentes React para Leaflet
+- **@types/leaflet**: Tipos TypeScript para Leaflet
+- **html-to-image**: Geração de imagens a partir de elementos HTML (suporta CSS moderno, incluindo oklch)
+- **html2canvas**: Biblioteca alternativa para captura de tela (mantida para compatibilidade)
 
 ## Decisões de Design
 
@@ -338,7 +412,10 @@ report-abandono/
 7. **Reutilização**: Componentes Header e NavigationHeader reutilizados em múltiplas telas
 8. **Toast Notifications**: Posição centralizada no topo, cores ricas ativadas
 9. **Geolocalização**: OpenStreetMap Nominatim para reverse geocoding (sem necessidade de API key)
-10. **Diferenciação de Usuários**: Telas separadas para usuário comum e ONG, com rotas distintas
+10. **Diferenciação de Usuários**: Telas separadas para usuário comum, ONG e administrador, com rotas distintas
+11. **Mapas Interativos**: Leaflet com OpenStreetMap para visualização de denúncias geograficamente
+12. **Compartilhamento de Mapas**: `html-to-image` para exportação de mapas como imagens (suporta CSS moderno)
+13. **Três Tipos de Usuário**: Comum (listagem), ONG (gerenciamento de denúncias), Administrador (gerenciamento de solicitações)
 
 ## Preparação para Backend
 
@@ -368,16 +445,44 @@ interface Complaint {
 }
 ```
 
+#### Request (Administrador)
+```typescript
+interface Request {
+  id: string
+  protocolo: string
+  dataInclusao: string
+  status: "nova" | "em_analise" | "negada" | "concluida"
+  dataRetorno: string | null
+  feedback: string | null
+}
+```
+
+#### Complaint (Rastreio - com coordenadas)
+```typescript
+interface Complaint {
+  id: string
+  protocolo: string
+  latitude: number
+  longitude: number
+  dataInclusao: string
+  descricao?: string
+}
+```
+
 ### Endpoints Esperados (TODO)
 
 - `GET /api/complaints` - Listar denúncias do usuário comum
 - `GET /api/complaints/ong` - Listar denúncias para ONG
+- `GET /api/requests/admin` - Listar solicitações para administrador
+- `GET /api/complaints/nearby?lat={lat}&lng={lng}&radius={radius}` - Buscar denúncias próximas (para mapa)
 - `POST /api/complaints` - Criar nova denúncia
 - `POST /api/auth/login` - Autenticação
 - `POST /api/auth/register` - Registro
 - `POST /api/auth/forgot-password` - Recuperação de senha
 - `PUT /api/complaints/:id` - Atualizar denúncia
+- `PUT /api/requests/:id` - Atualizar solicitação (administrador)
 - `DELETE /api/complaints/:id` - Excluir denúncia
+- `DELETE /api/requests/:id` - Excluir solicitação (administrador)
 
 ### Comentários TODO no Código
 
@@ -390,13 +495,15 @@ interface Complaint {
 
 - Integração completa com backend
 - Autenticação e autorização
-- Lógica de redirecionamento baseada no tipo de usuário (Comum/ONG)
+- Lógica de redirecionamento baseada no tipo de usuário (Comum/ONG/Administrador)
 - Implementação real dos handlers de ações
 - Upload de mídia para servidor
 - Sistema de comentários
 - Sistema de compartilhamento
 - Visualização detalhada de denúncias
 - Filtros avançados na listagem
+- Geolocalização automática do usuário no mapa de rastreio
+- Atualização em tempo real das denúncias no mapa
 
 ## Comandos Úteis
 
@@ -426,5 +533,12 @@ npx shadcn@latest add [component-name]
 - Toast notifications configuradas com sonner
 - Geolocalização usando APIs nativas do navegador
 - OpenStreetMap Nominatim para reverse geocoding (sem API key necessária)
+- Leaflet e react-leaflet para mapas interativos
+- `html-to-image` para exportação de mapas (suporta CSS moderno, incluindo oklch)
 - Dados estáticos em todas as telas, prontos para substituição por chamadas à API
-- Duas versões de listagem: uma para usuário comum (`/denuncias`) e outra para ONG (`/gerenciamento-denuncias`)
+- Três versões de listagem/gerenciamento:
+  - Usuário comum: `/denuncias` (ComplaintsListPage)
+  - ONG: `/gerenciamento-denuncias` (ComplaintsManagementPage)
+  - Administrador: `/gerenciamento-solicitacoes` (RequestsManagementPage)
+- Mapa de rastreio: `/rastreio` (TrackingPage) com visualização geográfica de denúncias
+- Estilos do Leaflet customizados no `index.css` para integração com o design system
