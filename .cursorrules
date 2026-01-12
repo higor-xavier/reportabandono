@@ -4,7 +4,7 @@
 
 O projeto está organizado em duas pastas principais:
 - `report-abandono/` - Front-end React + TypeScript + Vite
-- `report-abandono-server/` - Back-end (não implementado ainda)
+- `report-abandono-server/` - Back-end Node.js + TypeScript + Express + Prisma ORM
 
 ### Estrutura do Front-end (report-abandono)
 
@@ -542,3 +542,170 @@ npx shadcn@latest add [component-name]
   - Administrador: `/gerenciamento-solicitacoes` (RequestsManagementPage)
 - Mapa de rastreio: `/rastreio` (TrackingPage) com visualização geográfica de denúncias
 - Estilos do Leaflet customizados no `index.css` para integração com o design system
+
+## Estrutura do Back-end (report-abandono-server)
+
+### Estrutura de Pastas
+
+```
+report-abandono-server/
+├── src/
+│   ├── controllers/    # Controllers (camada de apresentação)
+│   ├── services/       # Services (regras de negócio pesadas, ex: cálculo de distância)
+│   ├── routes/         # Rotas da API
+│   ├── middlewares/    # Middlewares (autenticação, validação, etc)
+│   └── server.ts       # Arquivo principal do servidor
+├── prisma/
+│   ├── schema.prisma   # Schema do Prisma ORM
+│   ├── client.ts       # Cliente Prisma exportado
+│   └── migrations/     # Migrations do banco de dados
+├── .env                # Variáveis de ambiente (não versionado)
+├── .env.example        # Exemplo de variáveis de ambiente
+├── package.json
+├── tsconfig.json       # Configuração TypeScript
+└── README.md
+```
+
+### Tecnologias do Back-end
+
+- **Node.js**: Runtime JavaScript
+- **TypeScript**: Linguagem com tipagem estática
+- **Express**: Framework web para Node.js
+- **Prisma ORM**: ORM para MySQL
+- **MySQL**: Banco de dados relacional
+- **bcrypt**: Hash de senhas
+- **jsonwebtoken**: Autenticação JWT
+- **cors**: Controle de CORS
+- **dotenv**: Gerenciamento de variáveis de ambiente
+- **tsx**: Executor TypeScript para desenvolvimento (watch mode)
+
+### Arquitetura
+
+O back-end segue o padrão **MVC + Services**:
+
+- **Controllers** (`src/controllers/`): Recebem requisições HTTP, validam entrada, chamam services e retornam respostas
+- **Services** (`src/services/`): Contêm a lógica de negócio pesada (ex: cálculo de distância para atribuição automática de ONGs)
+- **Routes** (`src/routes/`): Definem os endpoints da API e conectam as rotas aos controllers
+- **Middlewares** (`src/middlewares/`): Interceptam requisições para autenticação, validação, tratamento de erros, etc.
+
+### Banco de Dados
+
+#### Schema Prisma
+
+O schema está em `prisma/schema.prisma` e define os seguintes modelos:
+
+1. **Usuario**: Usuários do sistema (COMUM ou ONG)
+   - Campos: id, nomeCompleto, email (único), senha, tipoUsuario, cpf, cnpj, endereco, numeroContato, latitude, longitude, criadoEm, tokenEsqueceuSenha
+   - Relações: denunciasCriadas, denunciasResponsavel
+
+2. **Denuncia**: Denúncias de abandono
+   - Campos: idDenuncia, descricao, tipoRegistro, status (0: Pendente, 1: Em andamento, 2: Resolvido), dataRegistro, localizacao, latitude, longitude, fkUsuarioId, fkResponsavelId
+   - Relações: usuarioCriador, ongResponsavel, historicos, midias
+
+3. **HistoricoDenuncia**: Histórico de mudanças de status
+   - Campos: idHistorico, statusAnterior, statusNovo, dataAlteracao, observacao, fkDenunciaIdDenuncia
+   - Relação: denuncia
+
+4. **Midia**: Mídias (fotos/vídeos) das denúncias
+   - Campos: idMidia, caminhoArquivo, tipoMidia, dataEnvio, fkDenunciaIdDenuncia
+   - Relação: denuncia
+
+#### Migrations
+
+As migrations estão em `prisma/migrations/` e são gerenciadas pelo Prisma. O Prisma cria automaticamente as migrations baseadas no schema.
+
+### Configuração
+
+#### Variáveis de Ambiente (.env)
+
+```env
+DATABASE_URL="mysql://usuario:senha@localhost:3306/report_abandono"
+PORT=3333
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+NODE_ENV=development
+```
+
+#### TypeScript (tsconfig.json)
+
+- Target: ES2020
+- Module: commonjs
+- Strict mode: ativado
+- RootDir: `./src`
+- OutDir: `./dist`
+- Path aliases: `@/*` aponta para `./src/*`
+- A pasta `prisma/` está excluída da compilação TypeScript (arquivos em `prisma/` não são compilados)
+
+### Prisma Client
+
+O Prisma Client é exportado em `prisma/client.ts`:
+
+```typescript
+import prisma from "../prisma/client";
+```
+
+**Nota importante**: O arquivo `prisma/client.ts` inclui `/// <reference types="node" />` no topo para reconhecer tipos do Node.js (`process.env`, etc).
+
+### Scripts Disponíveis
+
+- `npm run dev` - Inicia servidor em modo desenvolvimento (watch mode com tsx)
+- `npm run build` - Compila TypeScript para JavaScript
+- `npm run start` - Inicia servidor em produção (após build)
+- `npm run prisma:generate` - Gera o Prisma Client
+- `npm run prisma:migrate` - Cria e executa migrations
+- `npm run prisma:studio` - Abre Prisma Studio (interface gráfica do banco)
+- `npm run prisma:deploy` - Aplica migrations em produção
+
+### Servidor
+
+O servidor está configurado para rodar na **porta 3333** (configurável via `PORT` no `.env`).
+
+Arquivo principal: `src/server.ts`
+
+- Express configurado com CORS habilitado
+- Middlewares: JSON parser, URL encoded parser
+- Rotas básicas: `/` (boas-vindas) e `/health` (health check)
+
+### Padrões de Código - Back-end
+
+#### Importações
+
+- Usar path alias `@/` para imports de `src/`
+- Exemplo: `import { UserController } from "@/controllers/UserController"`
+- Prisma Client: `import prisma from "../prisma/client"` ou caminho relativo apropriado
+
+#### Estrutura de Arquivos
+
+- Controllers: `src/controllers/[Nome]Controller.ts`
+- Services: `src/services/[Nome]Service.ts`
+- Routes: `src/routes/[nome]Routes.ts`
+- Middlewares: `src/middlewares/[nome]Middleware.ts`
+
+#### Nomenclatura
+
+- Classes: PascalCase (ex: `UserController`, `DenunciaService`)
+- Arquivos: PascalCase para classes, camelCase para funções/utils
+- Variáveis e funções: camelCase
+
+### Funcionalidades Implementadas - Back-end
+
+- ✅ Estrutura de pastas MVC + Services criada
+- ✅ Prisma ORM configurado e funcionando
+- ✅ Schema do banco de dados criado (baseado no SQL fornecido)
+- ✅ Migrations configuradas e funcionando
+- ✅ Servidor Express básico configurado (porta 3333)
+- ✅ TypeScript configurado com strict mode
+- ✅ Prisma Client exportado e configurado corretamente
+- ✅ Health check endpoint (`/health`)
+- ⚠️ **Controllers, Services, Routes e Middlewares ainda não implementados**
+
+### Próximos Passos - Back-end
+
+- Implementar autenticação (login, registro, recuperação de senha)
+- Implementar controllers para usuários
+- Implementar controllers para denúncias
+- Implementar service de cálculo de distância (para atribuição automática de ONGs)
+- Implementar middlewares de autenticação JWT
+- Implementar validações com middlewares
+- Implementar upload de mídia
+- Implementar sistema de histórico de denúncias
+- Implementar endpoints da API conforme especificado no front-end

@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                    Int       @id @default(autoincrement())
+  nomeCompleto          String?   @map("nome_completo") @db.VarChar(255)
+  email                 String    @unique @db.VarChar(191)
+  senha                 String?   @db.VarChar(255)
+  tipoUsuario           String?   @map("tipo_usuario") @db.VarChar(50) // 'ONG' ou 'COMUM'
+  cpf                   String?   @db.VarChar(20)
+  cnpj                  String?   @db.VarChar(20)
+  endereco              String?   @db.VarChar(255)
+  numeroContato         String?   @map("numero_contato") @db.VarChar(20)
+  latitude              Decimal?  @db.Decimal(10, 8)
+  longitude             Decimal?  @db.Decimal(10, 8)
+  criadoEm              DateTime  @default(now()) @map("criado_em")
+  tokenEsqueceuSenha    Boolean?  @default(false) @map("token_esqueceu_senha")
+
+  // Relações
+  denunciasCriadas      Denuncia[] @relation("DenunciaAutor")
+  denunciasResponsavel  Denuncia[] @relation("DenunciaResponsavel")
+
+  @@map("usuario")
+}
+
+model Denuncia {
+  idDenuncia          Int                    @id @default(autoincrement()) @map("id_denuncia")
+  descricao           String?                @db.VarChar(255)
+  tipoRegistro        String?                @map("tipo_registro") @db.VarChar(255)
+  status              Int                    @default(0) // 0: Pendente, 1: Em andamento, 2: Resolvido
+  dataRegistro        DateTime               @default(now()) @map("data_registro")
+  localizacao         String?                @db.VarChar(255)
+  latitude            Decimal?               @db.Decimal(10, 8)
+  longitude           Decimal?               @db.Decimal(10, 8)
+  fkUsuarioId         Int?                   @map("fk_usuario_id")
+  fkResponsavelId     Int?                   @map("fk_responsavel_id")
+
+  // Relações
+  usuarioCriador      Usuario?               @relation("DenunciaAutor", fields: [fkUsuarioId], references: [id], onDelete: Cascade)
+  ongResponsavel      Usuario?               @relation("DenunciaResponsavel", fields: [fkResponsavelId], references: [id], onDelete: SetNull)
+  historicos          HistoricoDenuncia[]
+  midias              Midia[]
+
+  @@map("denuncia")
+}
+
+model HistoricoDenuncia {
+  idHistorico              Int       @id @default(autoincrement()) @map("id_historico")
+  statusAnterior           Int?      @map("status_anterior")
+  statusNovo               Int?      @map("status_novo")
+  dataAlteracao            DateTime  @default(now()) @map("data_alteracao")
+  observacao               String?   @db.VarChar(255)
+  fkDenunciaIdDenuncia     Int       @map("fk_denuncia_id_denuncia")
+
+  // Relação
+  denuncia                 Denuncia  @relation(fields: [fkDenunciaIdDenuncia], references: [idDenuncia], onDelete: Restrict)
+
+  @@map("historico_denuncia")
+}
+
+model Midia {
+  idMidia                  Int       @id @default(autoincrement()) @map("id_midia")
+  caminhoArquivo           String?   @map("caminho_arquivo") @db.VarChar(255)
+  tipoMidia                String?   @map("tipo_midia") @db.VarChar(50) // Foto ou Video
+  dataEnvio                DateTime  @default(now()) @map("data_envio")
+  fkDenunciaIdDenuncia     Int       @map("fk_denuncia_id_denuncia")
+
+  // Relação
+  denuncia                 Denuncia  @relation(fields: [fkDenunciaIdDenuncia], references: [idDenuncia], onDelete: Cascade)
+
+  @@map("midia")
+}

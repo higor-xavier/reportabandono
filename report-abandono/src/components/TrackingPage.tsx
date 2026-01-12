@@ -2,14 +2,14 @@ import { useEffect, useState, useRef } from "react"
 import { Link } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
-import { toBlob } from "html-to-image" // <--- NOVA IMPORTAÇÃO
+import { toBlob } from "html-to-image" // geração de imagem do mapa
 import { NavigationHeader } from "./NavigationHeader"
 import { Plus, Share2 } from "lucide-react"
 import "leaflet/dist/leaflet.css"
 
 // Coordenadas de Teófilo Otoni, MG (Avenida Alfredo Sá)
 const DEFAULT_CENTER: [number, number] = [-17.8575, -41.5053]
-const DEFAULT_ZOOM = 15 // Ajustei o zoom (25 é muito alto para visualização inicial)
+const DEFAULT_ZOOM = 15 // Ajuste do zoom
 
 interface Complaint {
   id: string
