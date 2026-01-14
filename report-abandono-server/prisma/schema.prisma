@@ -15,13 +15,14 @@ model Usuario {
   nomeCompleto          String?   @map("nome_completo") @db.VarChar(255)
   email                 String    @unique @db.VarChar(191)
   senha                 String?   @db.VarChar(255)
-  tipoUsuario           String?   @map("tipo_usuario") @db.VarChar(50) // 'ONG' ou 'COMUM'
+  tipoUsuario           String?   @map("tipo_usuario") @db.VarChar(50) // 'ONG' ou 'COMUM' ou 'ADMIN'
   cpf                   String?   @db.VarChar(20)
   cnpj                  String?   @db.VarChar(20)
   endereco              String?   @db.VarChar(255)
   numeroContato         String?   @map("numero_contato") @db.VarChar(20)
   latitude              Decimal?  @db.Decimal(10, 8)
   longitude             Decimal?  @db.Decimal(10, 8)
+  status                Int       @default(0) @map("status_aprovacao") // 0: Aprovado, 1: Pendente, 2: Negado
   criadoEm              DateTime  @default(now()) @map("criado_em")
   tokenEsqueceuSenha    Boolean?  @default(false) @map("token_esqueceu_senha")
 

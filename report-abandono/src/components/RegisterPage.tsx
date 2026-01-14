@@ -1,12 +1,12 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Header } from "./Header"
 import { PetIllustration } from "./PetIllustration"
 import { ToggleGroup } from "./ui/toggle-group"
-import { showInvalidEmailToast, showErrorToast } from "@/lib/toast-helpers"
+import { showInvalidEmailToast, showErrorToast, showSuccessToast } from "@/lib/toast-helpers"
 
 type UserType = "common" | "ong"
 
@@ -50,6 +50,7 @@ function formatCNPJ(value: string): string {
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate()
   const [userType, setUserType] = useState<UserType>("common")
   const [isAnimating, setIsAnimating] = useState(false)
 
@@ -114,64 +115,155 @@ export function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (userType === "common") {
-      // Validações do formulário comum
-      if (!commonForm.fullName) {
-        showErrorToast("Campo obrigatório", "Por favor, preencha o nome completo")
-        return
-      }
+    try {
+      if (userType === "common") {
+        // Validações do formulário comum
+        if (!commonForm.fullName) {
+          showErrorToast("Campo obrigatório", "Por favor, preencha o nome completo")
+          return
+        }
 
-      if (!commonForm.email || !isValidEmail(commonForm.email)) {
-        showInvalidEmailToast()
-        return
-      }
+        if (!commonForm.email || !isValidEmail(commonForm.email)) {
+          showInvalidEmailToast()
+          return
+        }
 
-      if (!commonForm.password || commonForm.password.length < 6) {
-        showErrorToast("Senha inválida", "A senha deve ter no mínimo 6 caracteres")
-        return
-      }
+        if (!commonForm.password || commonForm.password.length < 6) {
+          showErrorToast("Senha inválida", "A senha deve ter no mínimo 6 caracteres")
+          return
+        }
 
-      if (commonForm.password !== commonForm.confirmPassword) {
-        showErrorToast("Senhas não coincidem", "As senhas informadas não são iguais")
-        return
-      }
+        if (commonForm.password !== commonForm.confirmPassword) {
+          showErrorToast("Senhas não coincidem", "As senhas informadas não são iguais")
+          return
+        }
 
-      if (!commonForm.cpf || !isValidCPF(commonForm.cpf)) {
-        showErrorToast("CPF inválido", "Por favor, insira um CPF válido no formato 000.000.000-00")
-        return
-      }
+        if (!commonForm.cpf || !isValidCPF(commonForm.cpf)) {
+          showErrorToast("CPF inválido", "Por favor, insira um CPF válido no formato 000.000.000-00")
+          return
+        }
 
-      // TODO: Implementar chamada à API
-      console.log("Cadastro comum:", commonForm)
-    } else {
-      // Validações do formulário ONG
-      if (!ongForm.organizationName) {
-        showErrorToast("Campo obrigatório", "Por favor, preencha o nome da organização")
-        return
-      }
+        // Chamada à API
+        const response = await fetch("http://localhost:3333/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userType: "COMUM",
+            fullName: commonForm.fullName,
+            email: commonForm.email,
+            password: commonForm.password,
+            phone: commonForm.phone || undefined,
+            cpf: commonForm.cpf,
+            address: commonForm.address || undefined,
+          }),
+        })
 
-      if (!ongForm.email || !isValidEmail(ongForm.email)) {
-        showInvalidEmailToast()
-        return
-      }
+        const data = await response.json()
 
-      if (!ongForm.password || ongForm.password.length < 6) {
-        showErrorToast("Senha inválida", "A senha deve ter no mínimo 6 caracteres")
-        return
-      }
+        if (!response.ok) {
+          // E-mail duplicado (409)
+          if (response.status === 409) {
+            showErrorToast("E-mail já cadastrado", "Este e-mail já está em uso. Por favor, use outro e-mail ou faça login.")
+            return
+          }
 
-      if (ongForm.password !== ongForm.confirmPassword) {
-        showErrorToast("Senhas não coincidem", "As senhas informadas não são iguais")
-        return
-      }
+          // Erro de validação (400)
+          if (response.status === 400) {
+            showErrorToast("Dados inválidos", data.message || "Por favor, verifique os dados informados")
+            return
+          }
 
-      if (!ongForm.cnpj || !isValidCNPJ(ongForm.cnpj)) {
-        showErrorToast("CNPJ inválido", "Por favor, insira um CNPJ válido no formato 00.000.000/0000-00")
-        return
-      }
+          // Erro genérico
+          showErrorToast("Erro ao cadastrar", data.message || "Ocorreu um erro ao processar o cadastro")
+          return
+        }
 
-      // TODO: Implementar chamada à API
-      console.log("Cadastro ONG:", ongForm)
+        // Sucesso - redirecionar para login
+        showSuccessToast("Cadastro realizado com sucesso!", "Você pode fazer login agora")
+        setTimeout(() => {
+          navigate("/")
+        }, 1500)
+      } else {
+        // Validações do formulário ONG
+        if (!ongForm.organizationName) {
+          showErrorToast("Campo obrigatório", "Por favor, preencha o nome da organização")
+          return
+        }
+
+        if (!ongForm.email || !isValidEmail(ongForm.email)) {
+          showInvalidEmailToast()
+          return
+        }
+
+        if (!ongForm.password || ongForm.password.length < 6) {
+          showErrorToast("Senha inválida", "A senha deve ter no mínimo 6 caracteres")
+          return
+        }
+
+        if (ongForm.password !== ongForm.confirmPassword) {
+          showErrorToast("Senhas não coincidem", "As senhas informadas não são iguais")
+          return
+        }
+
+        if (!ongForm.cnpj || !isValidCNPJ(ongForm.cnpj)) {
+          showErrorToast("CNPJ inválido", "Por favor, insira um CNPJ válido no formato 00.000.000/0000-00")
+          return
+        }
+
+        // Chamada à API
+        const response = await fetch("http://localhost:3333/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userType: "ONG",
+            organizationName: ongForm.organizationName,
+            email: ongForm.email,
+            password: ongForm.password,
+            phone: ongForm.phone || undefined,
+            cnpj: ongForm.cnpj,
+            address: ongForm.address || undefined,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          // E-mail duplicado (409)
+          if (response.status === 409) {
+            showErrorToast("E-mail já cadastrado", "Este e-mail já está em uso. Por favor, use outro e-mail ou faça login.")
+            return
+          }
+
+          // Erro de validação (400)
+          if (response.status === 400) {
+            showErrorToast("Dados inválidos", data.message || "Por favor, verifique os dados informados")
+            return
+          }
+
+          // Erro genérico
+          showErrorToast("Erro ao cadastrar", data.message || "Ocorreu um erro ao processar o cadastro")
+          return
+        }
+
+        // Sucesso ONG - mostrar mensagem e redirecionar com delay
+        showSuccessToast(
+          "Solicitação enviada!",
+          "Aguarde a aprovação do administrador para acessar o sistema."
+        )
+        setTimeout(() => {
+          navigate("/")
+        }, 4000)
+      }
+    } catch (error) {
+      // Erro de conexão ou erro inesperado
+      showErrorToast(
+        "Erro de conexão",
+        "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente."
+      )
     }
   }
 
