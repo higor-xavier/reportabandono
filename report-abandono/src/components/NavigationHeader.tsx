@@ -1,19 +1,34 @@
 import { Link, useLocation } from "react-router-dom"
 import { Menu, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Logo } from "./Logo"
 import { UserAvatar } from "./UserAvatar"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function NavigationHeader() {
   const location = useLocation()
+  const { user } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const navItems = [
-    { path: "/home", label: "Início" },
-    { path: "/denuncias", label: "Denúncias" },
-    { path: "/rastreio", label: "Rastreio" },
-    { path: "/registrardenuncia", label: "Realizar denúncia" },
-  ]
+  // Definir links de navegação baseados no tipo de usuário
+  const navItems = useMemo(() => {
+    const baseItems = [
+      { path: "/home", label: "Início" },
+      { path: "/rastreio", label: "Rastreio" },
+      { path: "/registrardenuncia", label: "Realizar denúncia" },
+    ]
+
+    // Adicionar link específico baseado no tipo de usuário
+    if (user?.tipoUsuario === "ADMIN") {
+      baseItems.splice(1, 0, { path: "/gerenciamento-solicitacoes", label: "Gerenciamento" })
+    } else if (user?.tipoUsuario === "ONG") {
+      baseItems.splice(1, 0, { path: "/gerenciamento-denuncias", label: "Gerenciamento" })
+    } else if (user?.tipoUsuario === "COMUM") {
+      baseItems.splice(1, 0, { path: "/denuncias", label: "Denúncias" })
+    }
+
+    return baseItems
+  }, [user?.tipoUsuario])
 
   return (
     <header

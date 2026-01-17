@@ -1,18 +1,16 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import { toast } from "sonner"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Header } from "./Header"
 import { PetIllustration } from "./PetIllustration"
 import {
   showInvalidEmailToast,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showEmailNotFoundToast, // Pronto para uso quando API retornar USER_NOT_FOUND
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showInvalidCredentialsToast, // Pronto para uso quando API retornar INVALID_CREDENTIALS
+  showInvalidCredentialsToast,
   showErrorToast,
+  showRegistrationPendingToast,
 } from "@/lib/toast-helpers"
+import { useAuth } from "@/contexts/AuthContext"
 
 // Função para validar formato de e-mail
 function isValidEmail(email: string): boolean {
@@ -21,9 +19,12 @@ function isValidEmail(email: string): boolean {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate()
+  const { signIn } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [emailError, setEmailError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -47,9 +48,7 @@ export function LoginPage() {
     
     // Validação de e-mail
     if (!email) {
-      toast.error("Campo obrigatório", {
-        description: "Por favor, preencha o campo de e-mail",
-      })
+      showErrorToast("Campo obrigatório", "Por favor, preencha o campo de e-mail")
       return
     }
 
@@ -60,56 +59,31 @@ export function LoginPage() {
     }
 
     if (!password) {
-      toast.error("Campo obrigatório", {
-        description: "Por favor, preencha o campo de senha",
-      })
+      showErrorToast("Campo obrigatório", "Por favor, preencha o campo de senha")
       return
     }
 
-    // Simulação de chamada à API
-    // TODO: Substituir por chamada real quando o backend estiver pronto
+    setIsLoading(true)
+
     try {
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
-      // })
+      await signIn(email, password)
       
-      // if (!response.ok) {
-      //   const error = await response.json()
-      //   
-      //   // E-mail não cadastrado
-      //   if (error.code === 'USER_NOT_FOUND' || error.message?.includes('não encontrado')) {
-      //     showEmailNotFoundToast(() => {
-      //       // Navegar para página de registro
-      //       // navigate('/register')
-      //     })
-      //     return
-      //   }
-      
-      //   // E-mail ou senha inválidos
-      //   if (error.code === 'INVALID_CREDENTIALS' || error.message?.includes('inválido')) {
-      //     showInvalidCredentialsToast()
-      //     return
-      //   }
-      
-      //   // Erro genérico
-      //   showErrorToast("Erro ao fazer login", error.message || "Ocorreu um erro inesperado")
-      //   return
-      // }
-      
-      // const data = await response.json()
-      // toast.success("Login realizado com sucesso!", {
-      //   description: "Redirecionando...",
-      // })
-      // // Redirecionar para dashboard ou página principal
-      // // navigate('/dashboard')
-      
-    } catch (error) {
-      showErrorToast(
-        "Erro ao fazer login",
-        "Ocorreu um erro inesperado. Por favor, tente novamente."
-      )
+      // Login bem-sucedido - redirecionar para /home
+      navigate("/home")
+    } catch (error: any) {
+      // Tratar diferentes tipos de erro
+      if (error.message === "CADASTRO_EM_ANALISE") {
+        showRegistrationPendingToast()
+      } else if (error.message === "INVALID_CREDENTIALS") {
+        showInvalidCredentialsToast()
+      } else {
+        showErrorToast(
+          "Erro ao fazer login",
+          error.message || "Ocorreu um erro inesperado. Por favor, tente novamente."
+        )
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -175,8 +149,9 @@ export function LoginPage() {
                 type="submit"
                 variant="primary"
                 className="w-full font-semibold py-2 h-10 sm:h-11"
+                disabled={isLoading}
               >
-                LOGAR
+                {isLoading ? "Entrando..." : "LOGAR"}
               </Button>
 
               {/* Secondary Buttons */}

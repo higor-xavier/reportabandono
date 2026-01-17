@@ -65,5 +65,14 @@ export function showSuccessToast(message: string, description?: string) {
   })
 }
 
+/**
+ * Exibe toast de erro para cadastro em análise (ONG pendente/negada)
+ */
+export function showRegistrationPendingToast() {
+  toast.error("Cadastro em análise", {
+    description: "Seu cadastro ainda está em análise. Aguarde a aprovação para fazer login.",
+  })
+}
+
 
 

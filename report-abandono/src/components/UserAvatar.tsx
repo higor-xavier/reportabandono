@@ -1,4 +1,5 @@
 import { User, Lock, Trash2, LogOut } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -6,8 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function UserAvatar() {
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
+
+  const handleSignOut = () => {
+    signOut()
+    navigate("/")
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,7 +42,7 @@ export function UserAvatar() {
           <span>Apagar conta</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

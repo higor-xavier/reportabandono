@@ -1,5 +1,8 @@
 import bcrypt from "bcryptjs";
-import prisma from "../../prisma/client";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 interface RegisterCommonData {
   fullName: string;
@@ -89,8 +92,8 @@ export class AuthService {
       senha: hashedPassword,
       tipoUsuario: userType,
       status,
-      numeroContato: data.phone || null,
-      endereco: data.address || null,
+      numeroContato: data.phone || undefined,
+      endereco: data.address || undefined,
     };
 
     if (userType === "COMUM") {
@@ -121,5 +124,74 @@ export class AuthService {
     });
 
     return newUser;
+  }
+
+  /**
+   * Autentica um usuário e retorna um token JWT
+   * @param email - E-mail do usuário
+   * @param password - Senha do usuário
+   * @returns Token JWT e dados do usuário (sem a senha)
+   */
+  static async login(email: string, password: string) {
+    // Validação de campos obrigatórios
+    if (!email) {
+      throw new Error("E-mail é obrigatório");
+    }
+
+    if (!password) {
+      throw new Error("Senha é obrigatória");
+    }
+
+    // Buscar usuário pelo e-mail
+    const user = await prisma.usuario.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new Error("Credenciais inválidas");
+    }
+
+    // Verificar se o usuário tem senha (pode ser null em alguns casos)
+    if (!user.senha) {
+      throw new Error("Credenciais inválidas");
+    }
+
+    // Comparar senha com bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.senha);
+
+    if (!isPasswordValid) {
+      throw new Error("Credenciais inválidas");
+    }
+
+    // Regra de Negócio: Se o usuário for ONG e o status for 1 (Pendente) ou 2 (Negado), bloquear login
+    if (user.tipoUsuario === "ONG" && (user.status === 1 || user.status === 2)) {
+      throw new Error("Seu cadastro ainda está em análise");
+    }
+
+    // Gerar token JWT
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET não configurado");
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        tipoUsuario: user.tipoUsuario,
+      },
+      jwtSecret,
+      {
+        expiresIn: "7d", // Token expira em 7 dias
+      }
+    );
+
+    // Retornar token e dados do usuário (sem a senha)
+    const { senha: _, ...userWithoutPassword } = user;
+
+    return {
+      token,
+      user: userWithoutPassword,
+    };
   }
 }
