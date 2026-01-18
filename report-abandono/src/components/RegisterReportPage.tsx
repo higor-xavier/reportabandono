@@ -6,21 +6,19 @@ import { Textarea } from "./ui/textarea"
 import { ToggleGroup } from "./ui/toggle-group"
 import { Upload, MapPin } from "lucide-react"
 import { showErrorToast, showSuccessToast } from "@/lib/toast-helpers"
+import { useAuth } from "@/contexts/AuthContext"
+import { getCoordinatesFromAddress, type AddressData } from "@/lib/geocoding"
 
 type ComplaintType = "person" | "animal"
 
-interface AddressData {
-  logradouro: string
-  numero: string
-  bairro: string
-  cep: string
-}
-
 export function RegisterReportPage() {
+  const { user, token, isAuthenticated } = useAuth()
   const [complaintType, setComplaintType] = useState<ComplaintType>("person")
   const [details, setDetails] = useState("")
   const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const [address, setAddress] = useState<AddressData>({
     logradouro: "",
     numero: "",
@@ -61,6 +59,9 @@ export function RegisterReportPage() {
         bairro: addressData.suburb || addressData.neighbourhood || addressData.quarter || "",
         cep: addressData.postcode || "",
       })
+
+      // Armazenar coordenadas obtidas via GPS
+      setCoordinates({ latitude: lat, longitude: lng })
 
       showSuccessToast("Localização obtida", "Endereço preenchido automaticamente via GPS")
     } catch (error) {
@@ -188,34 +189,98 @@ export function RegisterReportPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    // Validar se o usuário está autenticado
+    if (!isAuthenticated || !user || !token) {
+      showErrorToast("Não autenticado", "É necessário estar logado para registrar uma denúncia.")
+      return
+    }
+
     if (!validateForm()) {
       return
     }
 
-    // TODO: Enviar dados para o backend
+    setIsSubmitting(true)
+
     try {
-      // Simulação de envio
-      console.log("Dados da denúncia:", {
-        complaintType,
-        details,
-        mediaFiles: mediaFiles.map((f) => f.name),
-        address,
+      let finalLatitude: number
+      let finalLongitude: number
+
+      // Se já temos coordenadas do GPS, usar elas
+      if (coordinates) {
+        finalLatitude = coordinates.latitude
+        finalLongitude = coordinates.longitude
+      } else {
+        // Caso contrário, fazer geocodificação do endereço preenchido manualmente
+        const coords = await getCoordinatesFromAddress(address)
+        
+        if (!coords) {
+          showErrorToast(
+            "Erro ao obter coordenadas",
+            "Não foi possível obter as coordenadas do endereço informado. Por favor, tente usar o GPS ou verifique o endereço."
+          )
+          setIsSubmitting(false)
+          return
+        }
+
+        finalLatitude = coords.latitude
+        finalLongitude = coords.longitude
+      }
+
+      // Montar endereço completo para salvar
+      const enderecoCompleto = `${address.logradouro}, ${address.numero} - ${address.bairro}, ${address.cep}`
+
+      // Criar FormData para enviar multipart/form-data
+      const formData = new FormData()
+      
+      // Adicionar campos de texto
+      formData.append("descricao", details.trim())
+      formData.append("tipoRegistro", complaintType === "person" ? "Vi uma pessoa abandonando" : "Somente o animal")
+      formData.append("localizacao", enderecoCompleto)
+      formData.append("latitude", finalLatitude.toString())
+      formData.append("longitude", finalLongitude.toString())
+
+      // Adicionar arquivos de mídia
+      mediaFiles.forEach((file) => {
+        formData.append("mediaFiles", file)
       })
 
-      showSuccessToast("Denúncia registrada", "Sua denúncia foi registrada com sucesso!")
+      // Enviar para o backend
+      const response = await fetch("http://localhost:3333/denuncias", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || "Erro ao registrar denúncia")
+      }
+
+      const data = await response.json()
+
+      showSuccessToast("Denúncia registrada", `Sua denúncia foi registrada com sucesso! Protocolo: ${data.denuncia.protocolo}`)
       
       // Limpar formulário
       setComplaintType("person")
       setDetails("")
       setMediaFiles([])
+      setCoordinates(null)
       setAddress({
         logradouro: "",
         numero: "",
         bairro: "",
         cep: "",
       })
-    } catch (error) {
-      showErrorToast("Erro ao registrar denúncia", "Ocorreu um erro ao registrar a denúncia. Por favor, tente novamente.")
+    } catch (error: any) {
+      console.error("Erro ao registrar denúncia:", error)
+      showErrorToast(
+        "Erro ao registrar denúncia",
+        error.message || "Ocorreu um erro ao registrar a denúncia. Por favor, tente novamente."
+      )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -413,8 +478,9 @@ export function RegisterReportPage() {
               type="submit"
               variant="primary"
               className="w-full text-base sm:text-lg py-3 sm:py-4"
+              disabled={isSubmitting || isLoadingLocation}
             >
-              Registrar denúncia
+              {isSubmitting ? "Registrando..." : "Registrar denúncia"}
             </Button>
           </form>
         </div>

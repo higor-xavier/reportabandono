@@ -19,6 +19,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "create-admin.ts"],
   "exclude": ["node_modules", "dist", "prisma"]
 }

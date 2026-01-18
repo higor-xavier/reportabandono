@@ -36,12 +36,15 @@ export function NavigationHeader() {
       style={{ backgroundColor: "#A4CEBD" }}
     >
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-10 xl:px-12 flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+        <Link
+          to="/home"
+          className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 hover:opacity-80 transition-opacity"
+        >
           <Logo />
           <h1 className="text-gray-700 text-lg sm:text-xl md:text-2xl lg:text-3xl font-extralight opacity-75 whitespace-nowrap">
             ReportAbandono
           </h1>
-        </div>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-3 lg:gap-4 xl:gap-5 flex-shrink-0">

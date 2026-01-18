@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
+import complaintRoutes from "./routes/complaint.routes";
 
 dotenv.config();
 
@@ -25,6 +26,9 @@ app.get("/health", (req, res) => {
 
 // Rotas de autenticação
 app.use("/auth", authRoutes);
+
+// Rotas de denúncias
+app.use("/denuncias", complaintRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

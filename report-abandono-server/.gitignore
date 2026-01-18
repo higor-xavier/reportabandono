@@ -31,3 +31,6 @@ pnpm-debug.log*
 # Prisma
 # Mantém o schema.prisma, mas ignora migrations se necessário
 # prisma/migrations
+
+# Uploads
+uploads/

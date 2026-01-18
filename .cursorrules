@@ -1,0 +1,777 @@
+# ReportAbandono - Gerenciador de Denúncias
+
+## Estrutura do Projeto
+
+O projeto está organizado em duas pastas principais:
+- `report-abandono/` - Front-end React + TypeScript + Vite
+- `report-abandono-server/` - Back-end Node.js + TypeScript + Express + Prisma ORM
+
+### Estrutura do Front-end (report-abandono)
+
+```
+report-abandono/
+├── src/
+│   ├── assets/
+│   │   ├── logo.png          # Logo da aplicação (cachorro e gato)
+│   │   └── main.png          # Ilustração principal (cachorro, gato e planta)
+│   ├── components/
+│   │   ├── ui/               # Componentes shadcn-ui
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── toggle-group.tsx
+│   │   │   └── dropdown-menu.tsx
+│   │   ├── Logo.tsx          # Componente do logo
+│   │   ├── PetIllustration.tsx  # Componente da ilustração principal
+│   │   ├── Header.tsx        # Header reutilizável (logo + título)
+│   │   ├── NavigationHeader.tsx  # Header com navegação (logo + links + avatar)
+│   │   ├── UserAvatar.tsx     # Avatar do usuário com dropdown menu
+│   │   ├── LoginPage.tsx      # Tela de login
+│   │   ├── RegisterPage.tsx  # Tela de cadastro (Comum/ONG)
+│   │   ├── ForgotPasswordPage.tsx  # Tela de recuperação de senha
+│   │   ├── HomePage.tsx       # Tela inicial (hero + como funciona)
+│   │   ├── RegisterReportPage.tsx  # Tela de registro de denúncia
+│   │   ├── ComplaintsListPage.tsx  # Tela de listagem de denúncias (usuário comum)
+│   │   ├── ComplaintsManagementPage.tsx  # Tela de gerenciamento de denúncias (ONG)
+│   │   ├── RequestsManagementPage.tsx  # Tela de gerenciamento de solicitações (Administrador)
+│   │   ├── TrackingPage.tsx  # Tela de rastreio de denúncias com mapa interativo
+│   │   └── NotFoundPage.tsx  # Tela de erro 404
+│   ├── lib/
+│   │   ├── utils.ts          # Utilitários (cn function)
+│   │   └── toast-helpers.ts  # Helpers para toast notifications
+│   ├── App.tsx               # Componente principal com rotas
+│   ├── main.tsx              # Entry point
+│   ├── index.css             # Estilos globais
+│   └── vite-env.d.ts        # Declarações de tipos para imagens
+├── index.html
+└── package.json
+```
+
+## Design System
+
+### Cores
+
+- **Header Background**: `#A4CEBD` (verde claro)
+- **Botão LOGAR**: `#85A191` (verde médio)
+- **Botões Secundários**: `bg-gray-100` com hover `bg-gray-200`
+- **Inputs**: `bg-gray-100` com `border-gray-300`
+- **Background Principal**: `bg-gray-50`
+- **Cards**: `bg-white` com `shadow-md`
+- **Status Badges**: 
+  - Encaminhada/Nova/Em análise: `bg-gray-200`
+  - Negada/Reportada: `bg-gray-300`
+  - Concluída: `bg-[#A4CEBD]`
+
+### Tipografia
+
+- **Fonte Principal**: Inter (Google Fonts)
+- **Pesos Disponíveis**: 200 (Extra Light), 400, 500, 600, 700
+- **Título "Gerenciador de Denúncias"**:
+  - Peso: `font-extralight` (200)
+  - Tamanho Responsivo:
+    - Mobile: `text-2xl` (24px)
+    - Small: `text-3xl` (30px)
+    - Medium: `text-4xl` (36px)
+    - Large: `text-5xl` (48px)
+  - Opacidade: `opacity-75` (75%)
+  - Cor: `text-gray-700`
+
+### Componentes
+
+#### Logo Component
+- Localização: `src/components/Logo.tsx`
+- Usa imagem: `src/assets/logo.png`
+- Tamanho: `w-30 h-30` (classe customizada)
+- Estilo: `object-contain`
+
+#### PetIllustration Component
+- Localização: `src/components/PetIllustration.tsx`
+- Usa imagem: `src/assets/main.png`
+- Estilo: Responsivo com `max-w-2xl max-h-2xl object-contain`
+
+#### Header Component
+- Localização: `src/components/Header.tsx`
+- Header reutilizável com logo e título "ReportAbandono"
+- Background: `#A4CEBD`
+- Usado em: LoginPage, ForgotPasswordPage, NotFoundPage
+
+#### NavigationHeader Component
+- Localização: `src/components/NavigationHeader.tsx`
+- Header com navegação completa
+- Links: Início, Denúncias, Rastreio, Realizar denúncia
+- Menu mobile com hamburger
+- Avatar do usuário no canto direito (desktop)
+- Usado em: HomePage, RegisterReportPage, ComplaintsListPage, ComplaintsManagementPage, RequestsManagementPage, TrackingPage
+
+#### UserAvatar Component
+- Localização: `src/components/UserAvatar.tsx`
+- Avatar circular com dropdown menu (shadcn-ui)
+- Opções: Gerenciar perfil, Trocar senha, Apagar conta, Sair
+- Integrado no NavigationHeader
+
+#### ToggleGroup Component
+- Localização: `src/components/ui/toggle-group.tsx`
+- Componente customizado para seleção de opções
+- Cores: Selecionado `#A4CEBD`, Não selecionado `bg-gray-200` com hover `bg-gray-300`
+- Usado em: RegisterPage (Comum/ONG), RegisterReportPage (Pessoa/Animal)
+
+## Rotas Configuradas
+
+### App.tsx - Sistema de Rotas (react-router-dom)
+
+- `/` - LoginPage
+- `/register` - RegisterPage
+- `/forgot-password` - ForgotPasswordPage
+- `/home` - HomePage
+- `/registrardenuncia` - RegisterReportPage
+- `/denuncias` - ComplaintsListPage (usuário comum)
+- `/gerenciamento-denuncias` - ComplaintsManagementPage (ONG)
+- `/gerenciamento-solicitacoes` - RequestsManagementPage (Administrador)
+- `/rastreio` - TrackingPage (mapa interativo de denúncias)
+- `*` - NotFoundPage (catch-all para rotas não encontradas)
+
+## Responsividade
+
+### Breakpoints Tailwind
+- `sm`: 640px
+- `md`: 768px
+- `lg`: 1024px
+- `xl`: 1280px
+
+### Layout Responsivo
+
+**Header:**
+- Sem padding vertical (removido para reduzir altura)
+- Padding horizontal: `px-6`
+- Centralizado com `justify-center`
+- `flex-wrap` para quebra em telas pequenas
+
+**NavigationHeader:**
+- Menu desktop: Links visíveis a partir de `md:`
+- Menu mobile: Hamburger icon com dropdown a partir de `md:hidden`
+- Avatar: Visível apenas em desktop (`hidden md:flex`)
+
+**Main Content:**
+- Mobile: Layout em coluna (`flex-col`)
+- Desktop (lg+): Layout em linha (`lg:flex-row`)
+- Ilustração: `min-h-[300px]` no mobile, removido no desktop
+
+**Formulário:**
+- Botões secundários: Coluna no mobile (`flex-col`), linha no sm+ (`sm:flex-row`)
+- Padding responsivo: `p-6 md:p-8`
+
+**Tabelas:**
+- Scroll horizontal em telas pequenas (`overflow-x-auto`)
+- Largura mínima: `min-w-[600px]`
+
+**Mapas:**
+- Altura mínima: `min-h-[500px]` no mobile, `min-h-[80vh]` no desktop
+- Container com `overflow-hidden` para evitar scrollbars indesejadas
+- Botões flutuantes posicionados com `fixed` no canto inferior direito
+- Zoom inicial configurável (padrão: 15 para rastreio)
+- Responsivo: mapa se adapta ao tamanho do container
+
+## Padrões de Código
+
+### Importações
+- Usar alias `@/` para imports de `src/`
+- Exemplo: `import { Button } from "@/components/ui/button"`
+- Ícones: Importar de `lucide-react`
+
+### Componentes
+- Componentes funcionais com TypeScript
+- Usar componentes shadcn-ui quando disponíveis
+- Componentes UI ficam em `components/ui/`
+- Componentes de página/feature ficam em `components/`
+- Reutilizar componentes quando possível (Header, NavigationHeader, etc.)
+
+### Estilos
+- **SEMPRE usar classes Tailwind padrão**, evitar valores arbitrários quando possível
+- Para cores específicas do design (#A4CEBD, #85A191), usar `style={{ backgroundColor: '#...' }}`
+- Preferir classes Tailwind sobre estilos inline quando houver equivalente
+- Usar `cn()` (de `lib/utils.ts`) para combinar classes condicionalmente
+
+### Imagens
+- Imagens ficam em `src/assets/`
+- Importar usando: `import imageName from "@/assets/image.png"`
+- Tipos declarados em `src/vite-env.d.ts`
+
+### Validações
+- Validação de email: Regex padrão
+- Validação de CPF/CNPJ: Formatação automática e validação de formato
+- Validação de CEP: Formatação automática
+- Validação de telefone: Formatação automática
+- Campos obrigatórios: Validar antes de submit
+
+### Toast Notifications
+- Usar `sonner` para toasts
+- Helpers em `lib/toast-helpers.ts`
+- Posição: `top-center`
+- Tipos: success, error, info
+- Toasts específicos para diferentes cenários (email inválido, email não cadastrado, etc.)
+
+## Funcionalidades Implementadas
+
+### Tela de Login (LoginPage)
+- ✅ Layout completo conforme design do Figma
+- ✅ Header com logo e título
+- ✅ Seção de ilustração (esquerda)
+- ✅ Formulário de login (direita)
+- ✅ Campos: E-mail e Senha
+- ✅ Botão principal "LOGAR"
+- ✅ Botões secundários: "Registrar-se" (link para `/register`) e "Esqueceu a senha?" (link para `/forgot-password`)
+- ✅ Responsividade completa
+- ⚠️ **Sem funcionalidade ainda** - apenas visual
+
+### Tela de Cadastro (RegisterPage)
+- ✅ Toggle para selecionar tipo de usuário (Comum/ONG)
+- ✅ Formulário dinâmico baseado no tipo selecionado
+- ✅ Validações de campos (email, CPF/CNPJ, telefone, CEP, senha)
+- ✅ Formatação automática de CPF, CNPJ, telefone e CEP
+- ✅ Validação de confirmação de senha
+- ✅ Botão de voltar para login (seta no canto superior esquerdo)
+- ✅ Responsividade completa
+- ✅ **Integração completa com backend** - requisição POST para `/auth/register`
+- ✅ Tratamento de respostas (sucesso, erro de email duplicado, erro genérico)
+- ✅ Toasts informativos para diferentes cenários
+- ✅ Redirecionamento para login após cadastro bem-sucedido
+  - Usuário COMUM: Redireciona após 1.5s
+  - Usuário ONG: Exibe mensagem de aprovação pendente e redireciona após 4s
+
+### Tela de Recuperação de Senha (ForgotPasswordPage)
+- ✅ Layout conforme design do Figma
+- ✅ Header reutilizado
+- ✅ Ilustração reutilizada
+- ✅ Campo de email com label "Digite o e-mail da sua conta:"
+- ✅ Botão "Enviar"
+- ✅ Botão de voltar para login (seta no canto superior esquerdo)
+- ✅ Toast de sucesso (apenas após confirmação do servidor)
+- ✅ Toast de erro para email inválido
+- ✅ Toast de erro para email não cadastrado
+- ✅ Responsividade completa
+- ⚠️ **Sem integração com backend** - apenas visual e validações
+
+### Tela Inicial (HomePage)
+- ✅ NavigationHeader com links de navegação
+- ✅ Seção Hero com título e botão "Realizar denúncia"
+- ✅ Ilustração PetIllustration
+- ✅ Seção "Como funciona" com 4 cards (Registre-se, Fotografe, Acompanhe, Compartilhe)
+- ✅ Background verde claro (#A4CEBD) na seção "Como funciona"
+- ✅ Responsividade completa
+
+### Tela de Registro de Denúncia (RegisterReportPage)
+- ✅ NavigationHeader
+- ✅ Toggle para selecionar tipo de denúncia (Vi uma pessoa abandonando / Somente o animal)
+- ✅ Textarea sempre visível com label e placeholder dinâmicos baseados na seleção
+- ✅ Botão "Adicionar mídia" para upload de imagens e vídeos
+- ✅ Validação de arquivos (tipo e tamanho)
+- ✅ Seção de localização com botão "Inserir automaticamente"
+- ✅ Geolocalização usando Geolocation API
+- ✅ Reverse geocoding usando OpenStreetMap Nominatim API
+- ✅ Campos de endereço preenchidos automaticamente (Logradouro, Número, Bairro, CEP)
+- ✅ Campos editáveis após preenchimento automático
+- ✅ Validações de todos os campos
+- ✅ Botão de voltar (seta no canto superior esquerdo)
+- ✅ Toasts para erros e sucesso
+- ✅ Responsividade completa
+- ⚠️ **Sem integração com backend** - apenas visual e validações
+
+### Tela de Listagem de Denúncias - Usuário Comum (ComplaintsListPage)
+- ✅ NavigationHeader
+- ✅ Título "Lista de denúncias"
+- ✅ Cards de resumo de status:
+  - Encaminhadas (cinza claro, ícone ArrowRightLeft)
+  - Em análise (cinza claro, ícone Clock)
+  - Negadas (cinza escuro, ícone XCircle)
+  - Concluídas (verde claro #A4CEBD, ícone CheckCircle)
+- ✅ Contadores dinâmicos calculados dos dados
+- ✅ Barra de busca com placeholder "Buscar por protocolo, status ou data"
+- ✅ Busca em tempo real (filtra enquanto digita)
+- ✅ Busca por protocolo, data, status e data de retorno
+- ✅ Tabela com colunas: Protocolo, Data de inclusão, Status, Data do retorno, Feedback, Ações
+- ✅ Status badges coloridos
+- ✅ Link "Ver retorno" quando há feedback
+- ✅ Ações: Compartilhar, Comentar, Excluir (ícones)
+- ✅ Paginação (5 itens por página)
+- ✅ Dados estáticos com estrutura pronta para backend
+- ✅ Interface `Complaint` e tipo `ComplaintStatus` definidos
+- ✅ Comentários TODO para integração com API
+- ✅ Responsividade completa
+
+### Tela de Gerenciamento de Denúncias - ONG (ComplaintsManagementPage)
+- ✅ NavigationHeader
+- ✅ Título "Gerenciamento de denúncias"
+- ✅ Cards de resumo de status:
+  - Novas (cinza claro, ícone Sun)
+  - Em análise (cinza claro, ícone Clock)
+  - Reportadas (cinza escuro, ícone Clock)
+  - Concluídas (verde claro #A4CEBD, ícone CheckCircle)
+- ✅ Contadores dinâmicos calculados dos dados
+- ✅ Barra de busca com placeholder "Buscar por protocolo, status ou data"
+- ✅ Busca em tempo real (filtra enquanto digita)
+- ✅ Busca por protocolo, data, status e data de retorno
+- ✅ Tabela com colunas: Protocolo, Data de inclusão, Status, Data do retorno, Feedback, Ações
+- ✅ Status badges coloridos
+- ✅ Feedback dinâmico baseado no status:
+  - "Abrir" para status "Nova"
+  - "Dar retorno" para status "Em análise"
+  - "Ver retorno" para status "Concluída" (quando há feedback)
+- ✅ Ações: Compartilhar, Comentar, Excluir (ícones)
+- ✅ Paginação (5 itens por página)
+- ✅ Dados estáticos com estrutura pronta para backend
+- ✅ Interface `Complaint` e tipo `ComplaintStatus` específicos para ONG
+- ✅ Comentários TODO para integração com API (`/api/complaints/ong`)
+- ✅ Rota `/gerenciamento-denuncias` configurada
+- ✅ Responsividade completa
+
+### Tela de Gerenciamento de Solicitações - Administrador (RequestsManagementPage)
+- ✅ NavigationHeader
+- ✅ Título "Gerenciamento de solicitações"
+- ✅ Cards de resumo de status:
+  - Novas (cinza claro, ícone Sun)
+  - Em análise (cinza claro, ícone Clock)
+  - Negadas (cinza escuro, ícone XCircle)
+  - Concluídas (verde claro #A4CEBD, ícone CheckCircle)
+- ✅ Contadores dinâmicos calculados dos dados
+- ✅ Barra de busca com placeholder "Buscar por protocolo, status ou data"
+- ✅ Busca em tempo real (filtra enquanto digita)
+- ✅ Busca por protocolo, data, status e data de retorno
+- ✅ Tabela com colunas: Protocolo, Data de inclusão, Status, Data do retorno, Feedback, Ações
+- ✅ Status badges coloridos
+- ✅ Feedback dinâmico baseado no status:
+  - "Abrir" para status "Nova"
+  - "Dar retorno" para status "Em análise"
+  - "Ver retorno" para status "Concluída" (quando há feedback)
+- ✅ Ações: Compartilhar, Comentar, Excluir (ícones)
+- ✅ Paginação (5 itens por página)
+- ✅ Dados estáticos com estrutura pronta para backend
+- ✅ Interface `Request` e tipo `RequestStatus` específicos para administrador
+- ✅ Comentários TODO para integração com API (`/api/requests/admin`)
+- ✅ Rota `/gerenciamento-solicitacoes` configurada
+- ✅ Responsividade completa
+- ⚠️ **Contexto**: Gerencia denúncias de abandono, denúncias falsas e criação de usuários ONG
+
+### Tela de Rastreio de Denúncias (TrackingPage)
+- ✅ NavigationHeader
+- ✅ Título "Locais de incidências"
+- ✅ Mapa interativo usando Leaflet e react-leaflet
+- ✅ TileLayer do OpenStreetMap
+- ✅ Centro inicial: Teófilo Otoni, MG (Avenida Alfredo Sá) - coordenadas [-17.8575, -41.5053]
+- ✅ Zoom inicial: 15
+- ✅ Scroll wheel habilitado para zoom
+- ✅ Pins de denúncias com popups informativos:
+  - Protocolo da denúncia
+  - Data de inclusão
+  - Descrição (quando disponível)
+- ✅ Dados estáticos de denúncias na região (prontos para substituição por API)
+- ✅ Botão flutuante "+" (Nova Denúncia):
+  - Cor verde (#85A191)
+  - Link para `/registrardenuncia`
+  - Posicionado no canto inferior direito
+- ✅ Botão flutuante "Compartilhar":
+  - Exporta mapa como imagem em alta resolução
+  - Usa `html-to-image` (biblioteca que suporta CSS moderno, incluindo oklch)
+  - Tenta usar Web Share API quando disponível
+  - Fallback: download automático da imagem como PNG
+  - Filtra controles do Leaflet da captura
+  - Estado de loading durante geração
+- ✅ Renderização apenas no cliente (SSR-safe)
+- ✅ Correção automática dos ícones padrão do Leaflet
+- ✅ Componente `MapUpdater` para atualizar o mapa quando necessário
+- ✅ Estilos do Leaflet importados e customizados no `index.css`
+- ✅ Responsividade completa
+- ⚠️ **Sem integração com backend** - dados estáticos, estrutura pronta para API
+
+### Tela de Erro 404 (NotFoundPage)
+- ✅ Header reutilizado
+- ✅ Ilustração PetIllustration reutilizada
+- ✅ Mensagem "Erro 404!"
+- ✅ Mensagem "Página não encontrada."
+- ✅ Descrição "Esse endereço não existe no nosso sistema!"
+- ✅ Botão "Página inicial" linkando para `/home`
+- ✅ Responsividade completa
+
+## Dependências Principais
+
+- **react-router-dom**: Navegação e rotas
+- **sonner**: Toast notifications
+- **lucide-react**: Ícones
+- **shadcn-ui**: Componentes UI (button, input, textarea, dropdown-menu)
+- **tailwindcss**: Estilização
+- **class-variance-authority**: Variantes de componentes
+- **clsx** e **tailwind-merge**: Utilitários para classes CSS
+- **leaflet**: Biblioteca de mapas interativos
+- **react-leaflet**: Componentes React para Leaflet
+- **@types/leaflet**: Tipos TypeScript para Leaflet
+- **html-to-image**: Geração de imagens a partir de elementos HTML (suporta CSS moderno, incluindo oklch)
+- **html2canvas**: Biblioteca alternativa para captura de tela (mantida para compatibilidade)
+
+## Decisões de Design
+
+1. **Cores do Design**: Usar cores específicas do Figma (#A4CEBD, #85A191) via inline styles quando necessário
+2. **Fonte Inter**: Carregada do Google Fonts com todos os pesos necessários
+3. **Imagens**: Substituídas SVGs por imagens PNG da pasta assets
+4. **Responsividade**: Mobile-first approach
+5. **Header**: Sem padding vertical para manter altura reduzida
+6. **Título**: Extra Light com opacidade 75% para visual mais suave
+7. **Reutilização**: Componentes Header e NavigationHeader reutilizados em múltiplas telas
+8. **Toast Notifications**: Posição centralizada no topo, cores ricas ativadas
+9. **Geolocalização**: OpenStreetMap Nominatim para reverse geocoding (sem necessidade de API key)
+10. **Diferenciação de Usuários**: Telas separadas para usuário comum, ONG e administrador, com rotas distintas
+11. **Mapas Interativos**: Leaflet com OpenStreetMap para visualização de denúncias geograficamente
+12. **Compartilhamento de Mapas**: `html-to-image` para exportação de mapas como imagens (suporta CSS moderno)
+13. **Três Tipos de Usuário**: Comum (listagem), ONG (gerenciamento de denúncias), Administrador (gerenciamento de solicitações)
+
+## Preparação para Backend
+
+### Estruturas de Dados
+
+#### Complaint (Usuário Comum)
+```typescript
+interface Complaint {
+  id: string
+  protocolo: string
+  dataInclusao: string
+  status: "encaminhada" | "em_analise" | "negada" | "concluida"
+  dataRetorno: string | null
+  feedback: string | null
+}
+```
+
+#### Complaint (ONG)
+```typescript
+interface Complaint {
+  id: string
+  protocolo: string
+  dataInclusao: string
+  status: "nova" | "em_analise" | "reportada" | "concluida"
+  dataRetorno: string | null
+  feedback: string | null
+}
+```
+
+#### Request (Administrador)
+```typescript
+interface Request {
+  id: string
+  protocolo: string
+  dataInclusao: string
+  status: "nova" | "em_analise" | "negada" | "concluida"
+  dataRetorno: string | null
+  feedback: string | null
+}
+```
+
+#### Complaint (Rastreio - com coordenadas)
+```typescript
+interface Complaint {
+  id: string
+  protocolo: string
+  latitude: number
+  longitude: number
+  dataInclusao: string
+  descricao?: string
+}
+```
+
+### Endpoints da API
+
+#### Endpoints Implementados
+
+- ✅ `POST /auth/register` - Registro de usuários
+  - **Endpoint**: `POST http://localhost:3333/auth/register`
+  - **Payload para COMUM**:
+    ```json
+    {
+      "userType": "COMUM",
+      "fullName": "string",
+      "email": "string",
+      "password": "string",
+      "phone": "string (opcional)",
+      "cpf": "string",
+      "address": "string (opcional)"
+    }
+    ```
+  - **Payload para ONG**:
+    ```json
+    {
+      "userType": "ONG",
+      "organizationName": "string",
+      "email": "string",
+      "password": "string",
+      "phone": "string (opcional)",
+      "cnpj": "string",
+      "address": "string (opcional)"
+    }
+    ```
+  - **Respostas**:
+    - `201`: Cadastro realizado com sucesso
+    - `400`: Dados inválidos (campos obrigatórios faltando)
+    - `409`: E-mail já cadastrado
+    - `500`: Erro interno do servidor
+  - **Validações**: Email único, campos obrigatórios (CPF para COMUM, CNPJ para ONG)
+  - **Regras de Negócio**:
+    - Hash de senha com bcryptjs (10 rounds)
+    - Status automático: COMUM → 0 (Aprovado), ONG → 1 (Pendente de Aprovação)
+    - Mapeamento de campos: fullName/organizationName → nomeCompleto no banco
+
+#### Endpoints Esperados (TODO)
+
+- `GET /api/complaints` - Listar denúncias do usuário comum
+- `GET /api/complaints/ong` - Listar denúncias para ONG
+- `GET /api/requests/admin` - Listar solicitações para administrador
+- `GET /api/complaints/nearby?lat={lat}&lng={lng}&radius={radius}` - Buscar denúncias próximas (para mapa)
+- `POST /api/complaints` - Criar nova denúncia
+- `POST /auth/login` - Autenticação
+- `POST /auth/forgot-password` - Recuperação de senha
+- `PUT /api/complaints/:id` - Atualizar denúncia
+- `PUT /api/requests/:id` - Atualizar solicitação (administrador)
+- `DELETE /api/complaints/:id` - Excluir denúncia
+- `DELETE /api/requests/:id` - Excluir solicitação (administrador)
+
+### Comentários TODO no Código
+
+- Substituir dados estáticos por chamadas à API
+- Implementar handlers de ações (compartilhar, comentar, excluir, feedback)
+- Integrar autenticação e autorização
+- Implementar lógica de redirecionamento baseada no tipo de usuário
+
+## Próximos Passos (Não Implementados)
+
+- ✅ Integração de cadastro de usuários (POST /auth/register) - **IMPLEMENTADO**
+- Integração de login (POST /auth/login)
+- Integração de recuperação de senha (POST /auth/forgot-password)
+- Autenticação e autorização (JWT)
+- Lógica de redirecionamento baseada no tipo de usuário (Comum/ONG/Administrador)
+- Implementação real dos handlers de ações
+- Upload de mídia para servidor
+- Sistema de comentários
+- Sistema de compartilhamento
+- Visualização detalhada de denúncias
+- Filtros avançados na listagem
+- Geolocalização automática do usuário no mapa de rastreio
+- Atualização em tempo real das denúncias no mapa
+- Integração dos demais endpoints da API
+
+## Comandos Úteis
+
+```bash
+# Desenvolvimento
+cd report-abandono
+npm run dev
+
+# Build
+npm run build
+
+# Preview
+npm run preview
+
+# Adicionar componente shadcn-ui
+npx shadcn@latest add [component-name]
+```
+
+## Notas Importantes
+
+- O projeto usa Tailwind CSS v4 com Vite
+- shadcn-ui configurado e funcionando
+- TypeScript com strict mode ativado
+- Path aliases configurados (`@/` aponta para `src/`)
+- Suporte a importação de imagens configurado via `vite-env.d.ts`
+- React Router DOM configurado com BrowserRouter
+- Toast notifications configuradas com sonner
+- Geolocalização usando APIs nativas do navegador
+- OpenStreetMap Nominatim para reverse geocoding (sem API key necessária)
+- Leaflet e react-leaflet para mapas interativos
+- `html-to-image` para exportação de mapas (suporta CSS moderno, incluindo oklch)
+- Dados estáticos em todas as telas, prontos para substituição por chamadas à API
+- Três versões de listagem/gerenciamento:
+  - Usuário comum: `/denuncias` (ComplaintsListPage)
+  - ONG: `/gerenciamento-denuncias` (ComplaintsManagementPage)
+  - Administrador: `/gerenciamento-solicitacoes` (RequestsManagementPage)
+- Mapa de rastreio: `/rastreio` (TrackingPage) com visualização geográfica de denúncias
+- Estilos do Leaflet customizados no `index.css` para integração com o design system
+
+## Estrutura do Back-end (report-abandono-server)
+
+### Estrutura de Pastas
+
+```
+report-abandono-server/
+├── src/
+│   ├── controllers/    # Controllers (camada de apresentação)
+│   │   └── AuthController.ts  # Controller de autenticação
+│   ├── services/       # Services (regras de negócio pesadas, ex: cálculo de distância)
+│   │   └── AuthService.ts     # Service de autenticação (hash de senha, validações)
+│   ├── routes/         # Rotas da API
+│   │   └── auth.routes.ts     # Rotas de autenticação (POST /auth/register)
+│   ├── middlewares/    # Middlewares (autenticação, validação, etc)
+│   └── server.ts       # Arquivo principal do servidor
+├── prisma/
+│   ├── schema.prisma   # Schema do Prisma ORM
+│   ├── client.ts       # Cliente Prisma exportado
+│   └── migrations/     # Migrations do banco de dados
+├── .env                # Variáveis de ambiente (não versionado)
+├── .env.example        # Exemplo de variáveis de ambiente
+├── package.json
+├── tsconfig.json       # Configuração TypeScript
+└── README.md
+```
+
+### Tecnologias do Back-end- **Node.js**: Runtime JavaScript
+- **TypeScript**: Linguagem com tipagem estática
+- **Express**: Framework web para Node.js
+- **Prisma ORM**: ORM para MySQL
+- **MySQL**: Banco de dados relacional
+- **bcryptjs**: Hash de senhas (compatível com JavaScript puro)
+- **@types/bcryptjs**: Tipos TypeScript para bcryptjs
+- **jsonwebtoken**: Autenticação JWT
+- **cors**: Controle de CORS
+- **dotenv**: Gerenciamento de variáveis de ambiente
+- **tsx**: Executor TypeScript para desenvolvimento (watch mode)
+
+### Arquitetura
+
+O back-end segue o padrão **MVC + Services**:
+
+- **Controllers** (`src/controllers/`): Recebem requisições HTTP, validam entrada, chamam services e retornam respostas
+- **Services** (`src/services/`): Contêm a lógica de negócio pesada (ex: cálculo de distância para atribuição automática de ONGs)
+- **Routes** (`src/routes/`): Definem os endpoints da API e conectam as rotas aos controllers
+- **Middlewares** (`src/middlewares/`): Interceptam requisições para autenticação, validação, tratamento de erros, etc.
+
+### Banco de Dados
+
+#### Schema Prisma
+
+O schema está em `prisma/schema.prisma` e define os seguintes modelos:
+
+1. **Usuario**: Usuários do sistema (COMUM ou ONG)
+   - Campos: id, nomeCompleto, email (único), senha, tipoUsuario, cpf, cnpj, endereco, numeroContato, latitude, longitude, criadoEm, tokenEsqueceuSenha
+   - Relações: denunciasCriadas, denunciasResponsavel
+
+2. **Denuncia**: Denúncias de abandono
+   - Campos: idDenuncia, descricao, tipoRegistro, status (0: Pendente, 1: Em andamento, 2: Resolvido), dataRegistro, localizacao, latitude, longitude, fkUsuarioId, fkResponsavelId
+   - Relações: usuarioCriador, ongResponsavel, historicos, midias
+
+3. **HistoricoDenuncia**: Histórico de mudanças de status
+   - Campos: idHistorico, statusAnterior, statusNovo, dataAlteracao, observacao, fkDenunciaIdDenuncia
+   - Relação: denuncia
+
+4. **Midia**: Mídias (fotos/vídeos) das denúncias
+   - Campos: idMidia, caminhoArquivo, tipoMidia, dataEnvio, fkDenunciaIdDenuncia
+   - Relação: denuncia
+
+#### Migrations
+
+As migrations estão em `prisma/migrations/` e são gerenciadas pelo Prisma. O Prisma cria automaticamente as migrations baseadas no schema.
+
+### Configuração
+
+#### Variáveis de Ambiente (.env)
+
+```env
+DATABASE_URL="mysql://usuario:senha@localhost:3306/report_abandono"
+PORT=3333
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+NODE_ENV=development
+```
+
+#### TypeScript (tsconfig.json)
+
+- Target: ES2020
+- Module: commonjs
+- Strict mode: ativado
+- RootDir: `./src`
+- OutDir: `./dist`
+- Path aliases: `@/*` aponta para `./src/*`
+- A pasta `prisma/` está excluída da compilação TypeScript (arquivos em `prisma/` não são compilados)
+
+### Prisma Client
+
+O Prisma Client é exportado em `prisma/client.ts`:
+
+```typescript
+import prisma from "../prisma/client";
+```
+
+**Nota importante**: O arquivo `prisma/client.ts` inclui `/// <reference types="node" />` no topo para reconhecer tipos do Node.js (`process.env`, etc).
+
+### Scripts Disponíveis- `npm run dev` - Inicia servidor em modo desenvolvimento (watch mode com tsx)
+- `npm run build` - Compila TypeScript para JavaScript
+- `npm run start` - Inicia servidor em produção (após build)
+- `npm run prisma:generate` - Gera o Prisma Client
+- `npm run prisma:migrate` - Cria e executa migrations
+- `npm run prisma:studio` - Abre Prisma Studio (interface gráfica do banco)
+- `npm run prisma:deploy` - Aplica migrations em produção
+
+### Servidor
+
+O servidor está configurado para rodar na **porta 3333** (configurável via `PORT` no `.env`).
+
+Arquivo principal: `src/server.ts`
+
+- Express configurado com CORS habilitado
+- Middlewares: JSON parser, URL encoded parser
+- Rotas básicas: `/` (boas-vindas) e `/health` (health check)
+- Rotas de autenticação: `/auth` (conectadas a `src/routes/auth.routes.ts`)
+
+### Padrões de Código - Back-end
+
+#### Importações- Usar path alias `@/` para imports de `src/`
+- Exemplo: `import { UserController } from "@/controllers/UserController"`
+- Prisma Client: `import prisma from "../prisma/client"` ou caminho relativo apropriado
+
+#### Estrutura de Arquivos
+
+- Controllers: `src/controllers/[Nome]Controller.ts`
+- Services: `src/services/[Nome]Service.ts`
+- Routes: `src/routes/[nome]Routes.ts`
+- Middlewares: `src/middlewares/[nome]Middleware.ts`
+
+#### Nomenclatura
+
+- Classes: PascalCase (ex: `UserController`, `DenunciaService`)
+- Arquivos: PascalCase para classes, camelCase para funções/utils
+- Variáveis e funções: camelCase
+
+### Funcionalidades Implementadas - Back-end
+
+- ✅ Estrutura de pastas MVC + Services criada
+- ✅ Prisma ORM configurado e funcionando
+- ✅ Schema do banco de dados criado (baseado no SQL fornecido)
+- ✅ Migrations configuradas e funcionando
+- ✅ Servidor Express básico configurado (porta 3333)
+- ✅ TypeScript configurado com strict mode
+- ✅ Prisma Client exportado e configurado corretamente
+- ✅ Health check endpoint (`/health`)
+- ✅ **AuthService** (`src/services/AuthService.ts`)
+  - Método `register`: Registra novos usuários
+  - Validação de email duplicado
+  - Hash de senha com bcryptjs (10 rounds)
+  - Definição de status baseado no tipo de usuário:
+    - COMUM: status = 0 (Aprovado)
+    - ONG: status = 1 (Pendente de Aprovação)
+  - Mapeamento correto de campos (fullName/organizationName → nomeCompleto)
+- ✅ **AuthController** (`src/controllers/AuthController.ts`)
+  - Método `register`: Recebe requisições HTTP
+  - Validação de tipo de usuário
+  - Tratamento de erros HTTP:
+    - 201: Cadastro realizado com sucesso
+    - 400: Dados inválidos
+    - 409: E-mail já cadastrado
+    - 500: Erro interno do servidor
+- ✅ **Rotas de Autenticação** (`src/routes/auth.routes.ts`)
+  - `POST /auth/register`: Endpoint de registro de usuários
+- ✅ Rotas conectadas ao servidor em `server.ts`
+
+### Próximos Passos - Back-end
+
+- ✅ Implementar registro de usuários (POST /auth/register)
+- Implementar login (POST /auth/login)
+- Implementar recuperação de senha (POST /auth/forgot-password)
+- Implementar controllers para denúncias
+- Implementar service de cálculo de distância (para atribuição automática de ONGs)
+- Implementar middlewares de autenticação JWT
+- Implementar validações com middlewares (Zod ou similar)
+- Implementar upload de mídia
+- Implementar sistema de histórico de denúncias
+- Implementar endpoints restantes da API conforme especificado no front-end
