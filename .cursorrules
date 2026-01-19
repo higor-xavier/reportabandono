@@ -615,9 +615,7 @@ report-abandono-server/
 ├── package.json
 ├── tsconfig.json       # Configuração TypeScript
 └── README.md
-```
-
-### Tecnologias do Back-end- **Node.js**: Runtime JavaScript
+```### Tecnologias do Back-end- **Node.js**: Runtime JavaScript
 - **TypeScript**: Linguagem com tipagem estática
 - **Express**: Framework web para Node.js
 - **Prisma ORM**: ORM para MySQL
