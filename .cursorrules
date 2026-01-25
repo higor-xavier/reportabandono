@@ -731,9 +731,7 @@ Arquivo principal: `src/server.ts`
 - Arquivos: PascalCase para classes, camelCase para funções/utils
 - Variáveis e funções: camelCase
 
-### Funcionalidades Implementadas - Back-end
-
-- ✅ Estrutura de pastas MVC + Services criada
+### Funcionalidades Implementadas - Back-end- ✅ Estrutura de pastas MVC + Services criada
 - ✅ Prisma ORM configurado e funcionando
 - ✅ Schema do banco de dados criado (baseado no SQL fornecido)
 - ✅ Migrations configuradas e funcionando

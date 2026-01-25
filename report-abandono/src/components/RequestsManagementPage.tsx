@@ -1,83 +1,43 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { NavigationHeader } from "./NavigationHeader"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import { Textarea } from "./ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./ui/dialog"
 import {
   Sun,
   Clock,
   CheckCircle,
   XCircle,
   Search,
-  Share2,
-  MessageSquare,
-  Trash2,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
+import { showSuccessToast, showErrorToast } from "@/lib/toast-helpers"
+import { toast } from "sonner"
 
 // Tipos para os dados
 type RequestStatus = "nova" | "em_analise" | "negada" | "concluida"
+type RequestType = "ONG_PENDENTE" | "USUARIO_REPORTADO" | "DENUNCIA_NEGADA"
 
 interface Request {
   id: string
+  tipo: RequestType
   protocolo: string
   dataInclusao: string
   status: RequestStatus
   dataRetorno: string | null
   feedback: string | null
+  dados: any // Dados específicos de cada tipo
 }
-
-// Dados estáticos (serão substituídos por dados do backend)
-const mockRequests: Request[] = [
-  {
-    id: "1",
-    protocolo: "125ds85E",
-    dataInclusao: "12/12/2023",
-    status: "nova",
-    dataRetorno: null,
-    feedback: null,
-  },
-  {
-    id: "2",
-    protocolo: "125523bD",
-    dataInclusao: "10/12/2023",
-    status: "em_analise",
-    dataRetorno: null,
-    feedback: null,
-  },
-  {
-    id: "3",
-    protocolo: "1523sA3c",
-    dataInclusao: "09/12/2023",
-    status: "concluida",
-    dataRetorno: "09/12/2023",
-    feedback: "Solicitação analisada e ação tomada",
-  },
-  {
-    id: "4",
-    protocolo: "1523sA3c",
-    dataInclusao: "09/12/2023",
-    status: "concluida",
-    dataRetorno: "09/12/2023",
-    feedback: "Solicitação analisada e ação tomada",
-  },
-  {
-    id: "5",
-    protocolo: "1523sA3c",
-    dataInclusao: "09/12/2023",
-    status: "concluida",
-    dataRetorno: "09/12/2023",
-    feedback: "Solicitação analisada e ação tomada",
-  },
-  {
-    id: "6",
-    protocolo: "1523sA3c",
-    dataInclusao: "09/12/2023",
-    status: "concluida",
-    dataRetorno: "09/12/2023",
-    feedback: "Solicitação analisada e ação tomada",
-  },
-]
 
 // Função para formatar status
 const formatStatus = (status: RequestStatus): string => {
@@ -101,51 +61,55 @@ const getStatusColor = (status: RequestStatus): string => {
   return colorMap[status]
 }
 
-// Função para obter texto do feedback baseado no status
-const getFeedbackText = (status: RequestStatus, hasFeedback: boolean): string | null => {
-  if (hasFeedback) {
-    return "Ver retorno"
-  }
-  
-  switch (status) {
-    case "nova":
-      return "Abrir"
-    case "em_analise":
-      return "Dar retorno"
-    case "negada":
-    case "concluida":
-    default:
-      return null
-  }
+// Função para formatar data brasileira
+const formatDateBR = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("pt-BR")
 }
 
+const API_BASE_URL = "http://localhost:3333"
+
 export function RequestsManagementPage() {
+  const { token } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [requests, setRequests] = useState<Request[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [reprovarMotivo, setReprovarMotivo] = useState("")
+  const [isReprovarDialogOpen, setIsReprovarDialogOpen] = useState(false)
   const itemsPerPage = 5
 
-  // TODO: Substituir por chamada à API quando o backend estiver pronto
-  // const [requests, setRequests] = useState<Request[]>([])
-  // const [isLoading, setIsLoading] = useState(false)
-  // 
-  // useEffect(() => {
-  //   const fetchRequests = async () => {
-  //     setIsLoading(true)
-  //     try {
-  //       const response = await fetch('/api/requests/admin')
-  //       const data = await response.json()
-  //       setRequests(data)
-  //     } catch (error) {
-  //       console.error('Erro ao buscar solicitações:', error)
-  //     } finally {
-  //       setIsLoading(false)
-  //     }
-  //   }
-  //   fetchRequests()
-  // }, [])
+  // Buscar solicitações da API
+  useEffect(() => {
+    const fetchRequests = async () => {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/solicitacoes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-  // Usar dados estáticos por enquanto
-  const requests = mockRequests
+        if (!response.ok) {
+          throw new Error("Erro ao buscar solicitações")
+        }
+
+        const data = await response.json()
+        setRequests(data)
+      } catch (error) {
+        console.error("Erro ao buscar solicitações:", error)
+        showErrorToast("Erro ao carregar solicitações", "Tente novamente mais tarde")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (token) {
+      fetchRequests()
+    }
+  }, [token])
 
   // Calcular contadores de status
   const statusCounts = useMemo(() => {
@@ -183,36 +147,183 @@ export function RequestsManagementPage() {
   // Handlers
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setCurrentPage(1) // Resetar para primeira página ao buscar
+    setCurrentPage(1)
   }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
 
-  const handleShare = (request: Request) => {
-    // TODO: Implementar compartilhamento
-    console.log("Compartilhar solicitação:", request.id)
+  const handleRowClick = (request: Request) => {
+    setSelectedRequest(request)
+    setIsDialogOpen(true)
   }
 
-  const handleComment = (request: Request) => {
-    // TODO: Implementar comentários
-    console.log("Comentar solicitação:", request.id)
+  // Ações para ONG Pendente
+  const handleAprovarOng = async () => {
+    if (!selectedRequest || selectedRequest.tipo !== "ONG_PENDENTE") return
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/ongs/${selectedRequest.dados.id}/aprovar`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Erro ao aprovar ONG")
+      }
+
+      showSuccessToast("ONG aprovada com sucesso", "Um e-mail foi enviado para a ONG")
+      setIsDialogOpen(false)
+      setSelectedRequest(null)
+
+      // Recarregar solicitações
+      const refreshResponse = await fetch(`${API_BASE_URL}/admin/solicitacoes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setRequests(data)
+      }
+    } catch (error: any) {
+      showErrorToast("Erro ao aprovar ONG", error.message)
+    }
   }
 
-  const handleDelete = (request: Request) => {
-    // TODO: Implementar exclusão
-    console.log("Excluir solicitação:", request.id)
+  const handleReprovarOng = async () => {
+    if (!selectedRequest || selectedRequest.tipo !== "ONG_PENDENTE") return
+
+    if (!reprovarMotivo.trim()) {
+      toast.error("Motivo obrigatório", {
+        description: "Por favor, informe o motivo da reprovação",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/ongs/${selectedRequest.dados.id}/reprovar`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ motivo: reprovarMotivo }),
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Erro ao reprovar ONG")
+      }
+
+      showSuccessToast("ONG reprovada com sucesso", "Um e-mail foi enviado para a ONG")
+      setIsReprovarDialogOpen(false)
+      setIsDialogOpen(false)
+      setSelectedRequest(null)
+      setReprovarMotivo("")
+
+      // Recarregar solicitações
+      const refreshResponse = await fetch(`${API_BASE_URL}/admin/solicitacoes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setRequests(data)
+      }
+    } catch (error: any) {
+      showErrorToast("Erro ao reprovar ONG", error.message)
+    }
   }
 
-  const handleFeedbackAction = (request: Request) => {
-    // TODO: Implementar ações de feedback baseadas no status
-    if (request.status === "nova") {
-      console.log("Abrir solicitação:", request.id)
-    } else if (request.status === "em_analise") {
-      console.log("Dar retorno para solicitação:", request.id)
-    } else if (request.feedback) {
-      console.log("Ver feedback:", request.feedback)
+  // Ações para Usuário Reportado
+  const handleConfirmarBanimento = async () => {
+    if (!selectedRequest || selectedRequest.tipo !== "USUARIO_REPORTADO") return
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/usuarios/${selectedRequest.dados.id}/banir`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Erro ao confirmar banimento")
+      }
+
+      showSuccessToast("Banimento confirmado", "O usuário permanecerá banido")
+      setIsDialogOpen(false)
+      setSelectedRequest(null)
+
+      // Recarregar solicitações
+      const refreshResponse = await fetch(`${API_BASE_URL}/admin/solicitacoes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setRequests(data)
+      }
+    } catch (error: any) {
+      showErrorToast("Erro ao confirmar banimento", error.message)
+    }
+  }
+
+  const handleReverterStatus = async () => {
+    if (!selectedRequest || selectedRequest.tipo !== "USUARIO_REPORTADO") return
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/usuarios/${selectedRequest.dados.id}/reverter`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Erro ao reverter status")
+      }
+
+      showSuccessToast("Status revertido", "O usuário voltou a ter acesso ao sistema")
+      setIsDialogOpen(false)
+      setSelectedRequest(null)
+
+      // Recarregar solicitações
+      const refreshResponse = await fetch(`${API_BASE_URL}/admin/solicitacoes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setRequests(data)
+      }
+    } catch (error: any) {
+      showErrorToast("Erro ao reverter status", error.message)
     }
   }
 
@@ -267,7 +378,7 @@ export function RequestsManagementPage() {
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value)
-                  setCurrentPage(1) // Resetar página ao digitar
+                  setCurrentPage(1)
                 }}
                 className="flex-1 bg-white border-gray-300"
               />
@@ -280,102 +391,87 @@ export function RequestsManagementPage() {
 
           {/* Tabela de Solicitações */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Protocolo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Data de inclusão
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Data do retorno
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Feedback
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {paginatedRequests.length === 0 ? (
+            {isLoading ? (
+              <div className="p-8 text-center text-gray-500">Carregando solicitações...</div>
+            ) : (
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      Nenhuma solicitação encontrada
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Protocolo
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Tipo
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Data de inclusão
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Data do retorno
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                      Feedback
+                    </th>
                   </tr>
-                ) : (
-                  paginatedRequests.map((request) => {
-                    const feedbackText = getFeedbackText(request.status, !!request.feedback)
-                    return (
-                      <tr key={request.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-900 font-mono">
-                          {request.protocolo}
-                        </td>
-                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                          {request.dataInclusao}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs sm:text-sm font-medium ${getStatusColor(
-                              request.status
-                            )} text-gray-800`}
-                          >
-                            {formatStatus(request.status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                          {request.dataRetorno || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-xs sm:text-sm">
-                          {feedbackText ? (
-                            <button
-                              onClick={() => handleFeedbackAction(request)}
-                              className="text-[#85A191] hover:text-[#85A191]/80 underline"
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginatedRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                        Nenhuma solicitação encontrada
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRequests.map((request) => {
+                      const tipoLabel =
+                        request.tipo === "ONG_PENDENTE"
+                          ? "ONG Pendente"
+                          : request.tipo === "USUARIO_REPORTADO"
+                          ? "Usuário Reportado"
+                          : "Denúncia Negada"
+
+                      return (
+                        <tr
+                          key={request.id}
+                          onClick={() => handleRowClick(request)}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <td className="px-4 py-3 text-xs sm:text-sm text-gray-900 font-mono">
+                            {request.protocolo}
+                          </td>
+                          <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">{tipoLabel}</td>
+                          <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                            {formatDateBR(request.dataInclusao)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-xs sm:text-sm font-medium ${getStatusColor(
+                                request.status
+                              )} text-gray-800`}
                             >
-                              {feedbackText}
-                            </button>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleShare(request)}
-                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                              aria-label="Compartilhar"
-                            >
-                              <Share2 className="w-4 h-4 text-gray-600" />
-                            </button>
-                            <button
-                              onClick={() => handleComment(request)}
-                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                              aria-label="Comentar"
-                            >
-                              <MessageSquare className="w-4 h-4 text-gray-600" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(request)}
-                              className="p-1.5 hover:bg-red-50 rounded transition-colors"
-                              aria-label="Excluir"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+                              {formatStatus(request.status)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                            {request.dataRetorno ? formatDateBR(request.dataRetorno) : "-"}
+                          </td>
+                          <td className="px-4 py-3 text-xs sm:text-sm">
+                            {request.feedback ? (
+                              <span className="text-gray-600">{request.feedback.substring(0, 30)}...</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* Paginação */}
@@ -416,9 +512,267 @@ export function RequestsManagementPage() {
           )}
         </div>
       </main>
+
+      {/* Dialog para ONG Pendente */}
+      {selectedRequest?.tipo === "ONG_PENDENTE" && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>ONG Pendente de Aprovação</DialogTitle>
+              <DialogDescription>
+                Protocolo: {selectedRequest.protocolo}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Nome da Organização</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.nomeCompleto || "-"}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">E-mail</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.email || "-"}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">CNPJ</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.cnpj || "-"}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Telefone</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.numeroContato || "-"}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Endereço</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.endereco || "-"}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Data de Cadastro</label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {formatDateBR(selectedRequest.dados.criadoEm)}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsReprovarDialogOpen(true)
+                }}
+                className="w-full sm:w-auto"
+              >
+                Reprovar
+              </Button>
+              <Button
+                onClick={handleAprovarOng}
+                style={{ backgroundColor: "#85A191" }}
+                className="w-full sm:w-auto text-white hover:opacity-90"
+              >
+                Aprovar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialog para Reprovar ONG */}
+      {selectedRequest?.tipo === "ONG_PENDENTE" && (
+        <Dialog open={isReprovarDialogOpen} onOpenChange={setIsReprovarDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reprovar ONG</DialogTitle>
+              <DialogDescription>
+                Informe o motivo da reprovação. Um e-mail será enviado para a ONG.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-4">
+              <Textarea
+                placeholder="Digite o motivo da reprovação..."
+                value={reprovarMotivo}
+                onChange={(e) => setReprovarMotivo(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsReprovarDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleReprovarOng}
+                style={{ backgroundColor: "#dc2626" }}
+                className="text-white hover:opacity-90"
+              >
+                Confirmar Reprovação
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialog para Usuário Reportado */}
+      {selectedRequest?.tipo === "USUARIO_REPORTADO" && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Usuário Reportado</DialogTitle>
+              <DialogDescription>
+                Protocolo: {selectedRequest.protocolo}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Nome</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.nomeCompleto || "-"}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">E-mail</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.email || "-"}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">CPF</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.cpf || "-"}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Telefone</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedRequest.dados.numeroContato || "-"}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Histórico de Denúncias
+                </label>
+                <div className="border rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                  {selectedRequest.dados.denuncias && selectedRequest.dados.denuncias.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedRequest.dados.denuncias.map((denuncia: any) => (
+                        <div key={denuncia.idDenuncia} className="border-b pb-3 last:border-b-0">
+                          <p className="text-sm font-medium text-gray-900">
+                            Denúncia #{denuncia.idDenuncia}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            Data: {formatDateBR(denuncia.dataRegistro)}
+                          </p>
+                          {denuncia.descricao && (
+                            <p className="text-sm text-gray-700 mt-2">{denuncia.descricao}</p>
+                          )}
+                          {denuncia.historicos && denuncia.historicos.length > 0 && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              <p>Histórico:</p>
+                              {denuncia.historicos.map((hist: any, idx: number) => (
+                                <p key={idx} className="ml-2">
+                                  - {hist.observacao || "Sem observação"}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Nenhuma denúncia encontrada</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={handleReverterStatus}
+                className="w-full sm:w-auto"
+              >
+                Reverter Status
+              </Button>
+              <Button
+                onClick={handleConfirmarBanimento}
+                style={{ backgroundColor: "#dc2626" }}
+                className="w-full sm:w-auto text-white hover:opacity-90"
+              >
+                Confirmar Banimento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialog para Denúncia Negada */}
+      {selectedRequest?.tipo === "DENUNCIA_NEGADA" && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Denúncia Negada</DialogTitle>
+              <DialogDescription>
+                Protocolo: {selectedRequest.protocolo}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Descrição</label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedRequest.dados.descricao || "-"}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Tipo de Registro</label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedRequest.dados.tipoRegistro || "-"}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Localização</label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedRequest.dados.localizacao || "-"}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Usuário que Criou</label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedRequest.dados.usuarioCriador?.nomeCompleto || "-"} (
+                  {selectedRequest.dados.usuarioCriador?.email || "-"})
+                </p>
+              </div>
+
+              {selectedRequest.dados.historico && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Motivo da Negativa</label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedRequest.dados.historico.observacao || "Sem motivo informado"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Data:{" "}
+                    {selectedRequest.dados.historico.dataAlteracao
+                      ? formatDateBR(selectedRequest.dados.historico.dataAlteracao)
+                      : "-"}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
-
-
-
