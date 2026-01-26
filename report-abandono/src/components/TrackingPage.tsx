@@ -5,11 +5,14 @@ import L from "leaflet"
 import { toBlob } from "html-to-image" // geração de imagem do mapa
 import { NavigationHeader } from "./NavigationHeader"
 import { Plus, Share2 } from "lucide-react"
+import { showErrorToast } from "@/lib/toast-helpers"
 import "leaflet/dist/leaflet.css"
 
 // Coordenadas de Teófilo Otoni, MG (Avenida Alfredo Sá)
 const DEFAULT_CENTER: [number, number] = [-17.8575, -41.5053]
 const DEFAULT_ZOOM = 15 // Ajuste do zoom
+
+const API_BASE_URL = "http://localhost:3333"
 
 interface Complaint {
   id: string
@@ -17,35 +20,8 @@ interface Complaint {
   latitude: number
   longitude: number
   dataInclusao: string
-  descricao?: string
+  descricao?: string | null
 }
-
-const mockComplaints: Complaint[] = [
-  {
-    id: "1",
-    protocolo: "125ds85E",
-    latitude: -17.8575,
-    longitude: -41.5053,
-    dataInclusao: "12/12/2023",
-    descricao: "Animal abandonado na Avenida Alfredo Sá",
-  },
-  {
-    id: "2",
-    protocolo: "125523bD",
-    latitude: -17.8580,
-    longitude: -41.5060,
-    dataInclusao: "10/12/2023",
-    descricao: "Cachorro encontrado na região",
-  },
-  {
-    id: "3",
-    protocolo: "1523sA3c",
-    latitude: -17.8570,
-    longitude: -41.5045,
-    dataInclusao: "09/12/2023",
-    descricao: "Gato abandonado próximo à praça",
-  },
-]
 
 // Componente para atualizar o mapa
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
@@ -56,9 +32,15 @@ function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }
   return null
 }
 
+// Função para formatar data brasileira
+const formatDateBR = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("pt-BR")
+}
+
 export function TrackingPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>(mockComplaints)
-  const [isLoading, setIsLoading] = useState(false)
+  const [complaints, setComplaints] = useState<Complaint[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
   
   // Ref para o container do mapa
@@ -66,6 +48,40 @@ export function TrackingPage() {
 
   useEffect(() => {
     setIsClient(true)
+  }, [])
+
+  // Buscar denúncias concluídas do backend
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`${API_BASE_URL}/denuncias/concluidas`)
+
+        if (!response.ok) {
+          throw new Error("Erro ao buscar denúncias")
+        }
+
+        const data = await response.json()
+        
+        // Filtrar apenas denúncias com coordenadas válidas
+        const validComplaints = (data.denuncias || []).filter(
+          (complaint: Complaint) =>
+            complaint.latitude !== null &&
+            complaint.longitude !== null &&
+            !isNaN(complaint.latitude) &&
+            !isNaN(complaint.longitude)
+        )
+
+        setComplaints(validComplaints)
+      } catch (error) {
+        console.error("Erro ao buscar denúncias:", error)
+        showErrorToast("Erro ao carregar mapa", "Não foi possível carregar as denúncias. Tente novamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchComplaints()
   }, [])
 
   // Configuração dos ícones do Leaflet
@@ -153,9 +169,11 @@ export function TrackingPage() {
             ref={mapRef}
             className="relative flex-1 bg-white rounded-lg shadow-md overflow-hidden min-h-[500px]"
           >
-            {!isClient ? (
+            {!isClient || isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <p className="text-gray-600">Carregando mapa...</p>
+                <p className="text-gray-600">
+                  {!isClient ? "Carregando mapa..." : "Carregando denúncias..."}
+                </p>
               </div>
             ) : (
               <MapContainer
@@ -171,28 +189,36 @@ export function TrackingPage() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {complaints.map((complaint) => (
-                  <Marker
-                    key={complaint.id}
-                    position={[complaint.latitude, complaint.longitude]}
-                  >
-                    <Popup>
-                      <div className="p-2">
-                        <p className="font-semibold text-sm text-gray-900">
-                          Protocolo: {complaint.protocolo}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Data: {complaint.dataInclusao}
-                        </p>
-                        {complaint.descricao && (
-                          <p className="text-xs text-gray-700 mt-2">
-                            {complaint.descricao}
+                {complaints
+                  .filter(
+                    (complaint) =>
+                      complaint.latitude !== null &&
+                      complaint.longitude !== null &&
+                      !isNaN(complaint.latitude) &&
+                      !isNaN(complaint.longitude)
+                  )
+                  .map((complaint) => (
+                    <Marker
+                      key={complaint.id}
+                      position={[complaint.latitude, complaint.longitude]}
+                    >
+                      <Popup>
+                        <div className="p-2">
+                          <p className="font-semibold text-sm text-gray-900">
+                            Protocolo: {complaint.protocolo}
                           </p>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
+                          <p className="text-xs text-gray-600 mt-1">
+                            Data: {formatDateBR(complaint.dataInclusao)}
+                          </p>
+                          {complaint.descricao && (
+                            <p className="text-xs text-gray-700 mt-2">
+                              {complaint.descricao}
+                            </p>
+                          )}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
               </MapContainer>
             )}
             

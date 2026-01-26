@@ -1,4 +1,4 @@
-import prisma from "../../prisma/client";
+import prisma from "../lib/prisma";
 import nodemailer from "nodemailer";
 
 // Configurar transporter do nodemailer

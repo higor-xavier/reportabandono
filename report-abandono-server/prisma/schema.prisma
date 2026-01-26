@@ -37,7 +37,7 @@ model Denuncia {
   idDenuncia          Int                    @id @default(autoincrement()) @map("id_denuncia")
   descricao           String?                @db.VarChar(255)
   tipoRegistro        String?                @map("tipo_registro") @db.VarChar(255)
-  status              Int                    @default(0) // 0: Pendente, 1: Em andamento, 2: Resolvido
+  status              Int                    @default(0) // 0: Pendente, 1: Em andamento, 2: Negado, 3: Concluido
   dataRegistro        DateTime               @default(now()) @map("data_registro")
   localizacao         String?                @db.VarChar(255)
   latitude            Decimal?               @db.Decimal(10, 8)

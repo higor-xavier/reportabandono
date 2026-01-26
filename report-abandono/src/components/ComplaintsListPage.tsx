@@ -29,7 +29,7 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
 // Tipos para os dados
-type ComplaintStatus = 0 | 1 | 2 | 3 // 0: Encaminhada, 1: Em análise, 2: Concluída, 3: Negada
+type ComplaintStatus = 0 | 1 | 2 | 3 // 0: Pendente/Encaminhada, 1: Em análise, 2: Negada, 3: Concluída
 
 interface Complaint {
   id: string
@@ -63,8 +63,8 @@ const formatStatus = (status: ComplaintStatus): string => {
   const statusMap: Record<ComplaintStatus, string> = {
     0: "Encaminhada",
     1: "Em análise",
-    2: "Concluída",
-    3: "Negada",
+    2: "Negada",
+    3: "Concluída",
   }
   return statusMap[status]
 }
@@ -267,8 +267,8 @@ export function ComplaintsListPage() {
     return {
       encaminhada: complaints.filter((c) => c.status === 0).length,
       em_analise: complaints.filter((c) => c.status === 1).length,
-      negada: complaints.filter((c) => c.status === 3).length,
-      concluida: complaints.filter((c) => c.status === 2).length,
+      negada: complaints.filter((c) => c.status === 2).length,
+      concluida: complaints.filter((c) => c.status === 3).length,
     }
   }, [complaints])
 
@@ -593,7 +593,7 @@ export function ComplaintsListPage() {
                           >
                             <Share2 className="w-4 h-4 text-gray-600" />
                           </button>
-                          {complaint.status === 2 && (
+                          {complaint.status === 3 && (
                             <button
                               onClick={() => handleContest(complaint)}
                               className="p-1.5 hover:bg-gray-100 rounded transition-colors"
