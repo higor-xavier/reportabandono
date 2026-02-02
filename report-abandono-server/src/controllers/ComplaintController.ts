@@ -213,67 +213,6 @@ export class ComplaintController {
   }
 
   /**
-   * Contesta uma denúncia
-   * POST /denuncias/:id/contestar
-   * Requer autenticação (Bearer Token)
-   * Apenas se status = 3 (Concluída)
-   */
-  static async contest(req: Request, res: Response) {
-    try {
-      if (!req.userId) {
-        return res.status(401).json({
-          error: "Não autenticado",
-          message: "É necessário estar autenticado para contestar denúncias.",
-        });
-      }
-
-      const idDenuncia = parseInt(req.params.id);
-
-      if (isNaN(idDenuncia)) {
-        return res.status(400).json({
-          error: "ID inválido",
-          message: "O ID da denúncia deve ser um número válido.",
-        });
-      }
-
-      const { justificativa } = req.body;
-
-      if (!justificativa || !justificativa.trim()) {
-        return res.status(400).json({
-          error: "Campo obrigatório",
-          message: "A justificativa é obrigatória.",
-        });
-      }
-
-      await ComplaintService.contest(idDenuncia, req.userId, justificativa.trim());
-
-      return res.status(200).json({
-        message: "Denúncia contestada com sucesso",
-      });
-    } catch (error: any) {
-      if (error.message === "Denúncia não encontrada") {
-        return res.status(404).json({
-          error: "Denúncia não encontrada",
-          message: error.message,
-        });
-      }
-
-      if (error.message.includes("Apenas denúncias com status")) {
-        return res.status(400).json({
-          error: "Operação não permitida",
-          message: error.message,
-        });
-      }
-
-      console.error("Erro ao contestar denúncia:", error);
-      return res.status(500).json({
-        error: "Erro interno do servidor",
-        message: "Ocorreu um erro ao contestar a denúncia. Tente novamente.",
-      });
-    }
-  }
-
-  /**
    * Busca uma denúncia completa por ID (para PDF)
    * GET /denuncias/:id
    * Requer autenticação (Bearer Token)

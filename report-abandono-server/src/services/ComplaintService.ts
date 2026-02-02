@@ -150,57 +150,6 @@ export class ComplaintService {
   }
 
   /**
-   * Contesta uma denúncia (altera status para 2 - Negada)
-   * Insere registro no histórico com a justificativa
-   */
-  static async contest(idDenuncia: number, userId: number, justificativa: string) {
-    // Verificar se a denúncia existe e pertence ao usuário
-    const denuncia = await prisma.denuncia.findFirst({
-      where: {
-        idDenuncia: idDenuncia,
-        fkUsuarioId: userId,
-      },
-    });
-
-    if (!denuncia) {
-      throw new Error("Denúncia não encontrada");
-    }
-
-    // Verificar se o status permite contestação (apenas status 3 - Concluída)
-    if (denuncia.status !== 3) {
-      throw new Error("Apenas denúncias com status 'Concluída' podem ser contestadas");
-    }
-
-    // Usar transação para atualizar status e criar histórico
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Atualizar status para 2 (Negada)
-      const denunciaAtualizada = await tx.denuncia.update({
-        where: {
-          idDenuncia: idDenuncia,
-        },
-        data: {
-          status: 2, // Negada
-        },
-      });
-
-      // 2. Criar registro no histórico
-      await tx.historicoDenuncia.create({
-        data: {
-          statusAnterior: 3, // Concluída
-          statusNovo: 2, // Negada
-          observacao: justificativa,
-          fkDenunciaIdDenuncia: idDenuncia,
-          dataAlteracao: new Date(),
-        },
-      });
-
-      return denunciaAtualizada;
-    });
-
-    return result;
-  }
-
-  /**
    * Lista denúncias para ONG (atribuídas ou disponíveis na região)
    * Retorna denúncias com status 0 (Pendente) sem responsável OU atribuídas à ONG
    */

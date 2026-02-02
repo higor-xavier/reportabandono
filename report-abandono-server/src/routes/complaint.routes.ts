@@ -66,13 +66,6 @@ router.get("/:id", authMiddleware, ComplaintController.findById);
 router.delete("/:id", authMiddleware, ComplaintController.delete);
 
 /**
- * POST /denuncias/:id/contestar
- * Contesta uma denúncia (altera status de 3 - Concluída para 2 - Negada)
- * Requer autenticação (Bearer Token)
- */
-router.post("/:id/contestar", authMiddleware, ComplaintController.contest);
-
-/**
  * PUT /denuncias/:id/abrir
  * Abre uma denúncia (status 0 -> 1 e atribui à ONG)
  * Requer autenticação (Bearer Token) e tipo ONG

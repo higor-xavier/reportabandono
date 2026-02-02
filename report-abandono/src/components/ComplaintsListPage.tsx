@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react"
 import { NavigationHeader } from "./NavigationHeader"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Textarea } from "./ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,6 @@ import {
   XCircle,
   Search,
   Share2,
-  MessageSquare,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -74,8 +72,8 @@ const getStatusColor = (status: ComplaintStatus): string => {
   const colorMap: Record<ComplaintStatus, string> = {
     0: "bg-gray-200",
     1: "bg-gray-200",
-    2: "bg-[#A4CEBD]",
-    3: "bg-gray-300",
+    2: "bg-gray-300",
+    3: "bg-[#A4CEBD]",
   }
   return colorMap[status]
 }
@@ -215,11 +213,6 @@ export function ComplaintsListPage() {
     open: boolean
     feedback: string
   }>({ open: false, feedback: "" })
-  const [contestDialog, setContestDialog] = useState<{
-    open: boolean
-    complaintId: string | null
-    justificativa: string
-  }>({ open: false, complaintId: null, justificativa: "" })
   const [shareDialog, setShareDialog] = useState<{
     open: boolean
     complaint: Complaint | null
@@ -308,52 +301,6 @@ export function ComplaintsListPage() {
   const handleViewFeedback = (complaint: Complaint) => {
     if (complaint.feedback) {
       setViewFeedbackDialog({ open: true, feedback: complaint.feedback })
-    }
-  }
-
-  const handleContest = (complaint: Complaint) => {
-    setContestDialog({ open: true, complaintId: complaint.id, justificativa: "" })
-  }
-
-  const handleConfirmContest = async () => {
-    if (!token || !contestDialog.complaintId || !contestDialog.justificativa.trim()) {
-      showErrorToast("Justificativa obrigatória", "Por favor, informe a justificativa da contestação.")
-      return
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:3333/denuncias/${contestDialog.complaintId}/contestar`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ justificativa: contestDialog.justificativa }),
-        }
-      )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Erro ao contestar denúncia")
-      }
-
-      showSuccessToast("Denúncia contestada", "A denúncia foi contestada com sucesso.")
-      setContestDialog({ open: false, complaintId: null, justificativa: "" })
-
-      // Recarregar lista
-      const refreshResponse = await fetch("http://localhost:3333/denuncias/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (refreshResponse.ok) {
-        const data = await refreshResponse.json()
-        setComplaints(data.denuncias || [])
-      }
-    } catch (error: any) {
-      showErrorToast("Erro ao contestar", error.message || "Não foi possível contestar a denúncia.")
     }
   }
 
@@ -593,15 +540,6 @@ export function ComplaintsListPage() {
                           >
                             <Share2 className="w-4 h-4 text-gray-600" />
                           </button>
-                          {complaint.status === 3 && (
-                            <button
-                              onClick={() => handleContest(complaint)}
-                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                              aria-label="Contestar"
-                            >
-                              <MessageSquare className="w-4 h-4 text-gray-600" />
-                            </button>
-                          )}
                           {complaint.status === 0 && (
                             <button
                               onClick={() => handleDelete(complaint)}
@@ -672,38 +610,6 @@ export function ComplaintsListPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewFeedbackDialog({ open: false, feedback: "" })}>
               Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Contestar */}
-      <Dialog
-        open={contestDialog.open}
-        onOpenChange={(open: boolean) => setContestDialog({ open, complaintId: null, justificativa: "" })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Contestar Denúncia</DialogTitle>
-            <DialogDescription>Informe a justificativa para contestar esta denúncia</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea
-              placeholder="Digite a justificativa da contestação..."
-              value={contestDialog.justificativa}
-              onChange={(e) => setContestDialog({ ...contestDialog, justificativa: e.target.value })}
-              className="min-h-[120px] bg-gray-100 border-gray-300"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setContestDialog({ open: false, complaintId: null, justificativa: "" })}
-            >
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleConfirmContest}>
-              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>

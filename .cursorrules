@@ -689,11 +689,7 @@ O Prisma Client é exportado em `prisma/client.ts`:
 
 ```typescript
 import prisma from "../prisma/client";
-```
-
-**Nota importante**: O arquivo `prisma/client.ts` inclui `/// <reference types="node" />` no topo para reconhecer tipos do Node.js (`process.env`, etc).
-
-### Scripts Disponíveis- `npm run dev` - Inicia servidor em modo desenvolvimento (watch mode com tsx)
+```**Nota importante**: O arquivo `prisma/client.ts` inclui `/// <reference types="node" />` no topo para reconhecer tipos do Node.js (`process.env`, etc).### Scripts Disponíveis- `npm run dev` - Inicia servidor em modo desenvolvimento (watch mode com tsx)
 - `npm run build` - Compila TypeScript para JavaScript
 - `npm run start` - Inicia servidor em produção (após build)
 - `npm run prisma:generate` - Gera o Prisma Client
