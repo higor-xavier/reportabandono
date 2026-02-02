@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import authRoutes from "./routes/auth.routes";
 import complaintRoutes from "./routes/complaint.routes";
 import adminRoutes from "./routes/admin.routes";
@@ -15,6 +16,12 @@ const PORT = process.env.PORT || 3333;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir arquivos estáticos da pasta uploads
+// Usa process.cwd() para garantir que funcione tanto em dev quanto em produção
+// Mesma lógica usada no uploadMiddleware para manter consistência
+const uploadsPath = path.join(process.cwd(), "uploads");
+app.use("/uploads", express.static(uploadsPath));
 
 // Rota de teste
 app.get("/", (req, res) => {
