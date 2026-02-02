@@ -163,9 +163,30 @@ export class AuthService {
       throw new Error("Credenciais inválidas");
     }
 
-    // Regra de Negócio: Se o usuário for ONG e o status for 1 (Pendente) ou 2 (Negado), bloquear login
-    if (user.tipoUsuario === "ONG" && (user.status === 1 || user.status === 2)) {
+    // Regra de Negócio: Se o usuário for ONG e o status for 1 (Pendente), bloquear login
+    if (user.tipoUsuario === "ONG" && user.status === 1) {
       throw new Error("Seu cadastro ainda está em análise");
+    }
+
+    // Regra de Negócio: Se o usuário tiver status 2, verificar o contexto
+    // Para ONG: status 2 pode ser "Negado" (cadastro) ou "Excluído Logicamente" (conta)
+    // Para COMUM: status 2 só pode ser "Excluído Logicamente" (não passa por aprovação)
+    if (user.status === 2) {
+      // Verificar se o usuário tem denúncias (indicando que foi soft delete)
+      const denunciasCount = await prisma.denuncia.count({
+        where: { fkUsuarioId: user.id },
+      });
+      
+      if (denunciasCount > 0) {
+        // Tem denúncias = foi excluído logicamente (soft delete)
+        throw new Error("Esta conta foi desativada. Entre em contato com o suporte para mais informações.");
+      } else if (user.tipoUsuario === "ONG") {
+        // ONG sem denúncias e status 2 = cadastro negado
+        throw new Error("Seu cadastro foi negado. Entre em contato com o suporte para mais informações.");
+      } else {
+        // COMUM sem denúncias e status 2 = não deveria acontecer, mas bloqueia por segurança
+        throw new Error("Esta conta foi desativada. Entre em contato com o suporte para mais informações.");
+      }
     }
 
     // Gerar token JWT

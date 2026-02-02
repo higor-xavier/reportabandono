@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import complaintRoutes from "./routes/complaint.routes";
 import adminRoutes from "./routes/admin.routes";
+import userRoutes from "./routes/user.routes";
 
 dotenv.config();
 
@@ -33,6 +34,9 @@ app.use("/denuncias", complaintRoutes);
 
 // Rotas de administração
 app.use("/admin", adminRoutes);
+
+// Rotas de usuário
+app.use("/users", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

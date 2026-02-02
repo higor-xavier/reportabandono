@@ -20,6 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => void
+  updateUser: (userData: Partial<User>) => void
   loading: boolean
 }
 
@@ -104,6 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData }
+      setUser(updatedUser)
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(updatedUser))
+    }
+  }
+
   const isAuthenticated = !!token && !!user
 
   return (
@@ -114,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         signIn,
         signOut,
+        updateUser,
         loading,
       }}
     >
